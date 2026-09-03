@@ -1,0 +1,158 @@
+INFO:     Started server process [55559]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+[🚀] Executing raw recon pipeline for thinknet.online...
+[⏳] This may take several minutes. Streaming verbose output:
+--------------------------------------------------
+  | [+] Target: thinknet.online
+  | [+] Mode: fast
+  | [FAST] Running quick recon...
+  | www.thinknet.online
+  | thinknet.online
+  | [FAST] Done. Output: live_hosts.txt
+  | [+] Recon Completed!
+  | Results saved in: data/recon-thinknet.online
+  | --- RAW OUTPUT START ---
+  | [SUBDOMAINS]
+  | thinknet.online
+  | www.thinknet.online
+  | [LIVE HOSTS & TECH]
+  | No live hosts found.
+  | [PORTS]
+  | www.thinknet.online:443
+  | www.thinknet.online:80
+  | www.thinknet.online:443
+  | www.thinknet.online:80
+  | thinknet.online:443
+  | thinknet.online:80
+  | thinknet.online:80
+  | thinknet.online:443
+  | [NMAP SERVICES]
+  | # Nmap 7.99 scan initiated Mon Apr 13 08:15:37 2026 as: nmap -sV -iL hosts_for_nmap.txt -oN nmap.txt
+  | Nmap scan report for thinknet.online (216.198.79.1)
+  | Host is up (0.0093s latency).
+  | Other addresses for thinknet.online (not scanned): 64.29.17.1
+  | Not shown: 998 filtered tcp ports (no-response)
+  | PORT    STATE SERVICE  VERSION
+  | 80/tcp  open  http     Vercel
+  | 443/tcp open  ssl/http Golang net/http server
+  | 2 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+  | ==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+  | SF-Port80-TCP:V=7.99%I=7%D=4/13%Time=69DC592C%P=arm-apple-darwin25.3.0%r(G
+  | SF:etRequest,8A,"HTTP/1\.0\x20308\x20Permanent\x20Redirect\r\nContent-Type
+  | SF::\x20text/plain\r\nLocation:\x20https:///\r\nRefresh:\x200;url=https://
+  | SF:/\r\nserver:\x20Vercel\r\n\r\nRedirecting\.\.\.")%r(HTTPOptions,8A,"HTT
+  | SF:P/1\.0\x20308\x20Permanent\x20Redirect\r\nContent-Type:\x20text/plain\r
+  | SF:\nLocation:\x20https:///\r\nRefresh:\x200;url=https:///\r\nserver:\x20V
+  | SF:ercel\r\n\r\nRedirecting\.\.\.")%r(FourOhFourRequest,D0,"HTTP/1\.0\x203
+  | SF:08\x20Permanent\x20Redirect\r\nContent-Type:\x20text/plain\r\nLocation:
+  | SF:\x20https:///nice%20ports%2C/Tri%6Eity\.txt%2ebak\r\nRefresh:\x200;url=
+  | SF:https:///nice%20ports%2C/Tri%6Eity\.txt%2ebak\r\nserver:\x20Vercel\r\n\
+  | SF:r\nRedirecting\.\.\.");
+  | ==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+  | SF-Port443-TCP:V=7.99%T=SSL%I=7%D=4/13%Time=69DC5932%P=arm-apple-darwin25.
+  | SF:3.0%r(GetRequest,1B3,"HTTP/1\.0\x20404\x20Not\x20Found\r\nCache-Control
+  | SF::\x20public,\x20max-age=0,\x20must-revalidate\r\nContent-Length:\x20107
+  | SF:\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nDate:\x20Mon,\x201
+  | SF:3\x20Apr\x202026\x2002:47:14\x20GMT\r\nServer:\x20Vercel\r\nStrict-Tran
+  | SF:sport-Security:\x20max-age=63072000\r\nX-Vercel-Error:\x20DEPLOYMENT_NO
+  | SF:T_FOUND\r\nX-Vercel-Id:\x20bom1::kmcsp-1776048434382-ed58f9c670c7\r\n\r
+  | SF:\nThe\x20deployment\x20could\x20not\x20be\x20found\x20on\x20Vercel\.\n\
+  | SF:nDEPLOYMENT_NOT_FOUND\n\nbom1::kmcsp-1776048434382-ed58f9c670c7\n")%r(H
+  | SF:TTPOptions,1B3,"HTTP/1\.0\x20404\x20Not\x20Found\r\nCache-Control:\x20p
+  | SF:ublic,\x20max-age=0,\x20must-revalidate\r\nContent-Length:\x20107\r\nCo
+  | SF:ntent-Type:\x20text/plain;\x20charset=utf-8\r\nDate:\x20Mon,\x2013\x20A
+  | SF:pr\x202026\x2002:47:14\x20GMT\r\nServer:\x20Vercel\r\nStrict-Transport-
+  | SF:Security:\x20max-age=63072000\r\nX-Vercel-Error:\x20DEPLOYMENT_NOT_FOUN
+  | SF:D\r\nX-Vercel-Id:\x20bom1::sqwqf-1776048434484-6f041d231d8e\r\n\r\nThe\
+  | SF:x20deployment\x20could\x20not\x20be\x20found\x20on\x20Vercel\.\n\nDEPLO
+  | SF:YMENT_NOT_FOUND\n\nbom1::sqwqf-1776048434484-6f041d231d8e\n")%r(FourOhF
+  | SF:ourRequest,1B3,"HTTP/1\.0\x20404\x20Not\x20Found\r\nCache-Control:\x20p
+  | SF:ublic,\x20max-age=0,\x20must-revalidate\r\nContent-Length:\x20107\r\nCo
+  | SF:ntent-Type:\x20text/plain;\x20charset=utf-8\r\nDate:\x20Mon,\x2013\x20A
+  | SF:pr\x202026\x2002:47:14\x20GMT\r\nServer:\x20Vercel\r\nStrict-Transport-
+  | SF:Security:\x20max-age=63072000\r\nX-Vercel-Error:\x20DEPLOYMENT_NOT_FOUN
+  | SF:D\r\nX-Vercel-Id:\x20bom1::l8mm8-1776048434577-154b0b392470\r\n\r\nThe\
+  | SF:x20deployment\x20could\x20not\x20be\x20found\x20on\x20Vercel\.\n\nDEPLO
+  | SF:YMENT_NOT_FOUND\n\nbom1::l8mm8-1776048434577-154b0b392470\n")%r(Generic
+  | SF:Lines,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/p
+  | SF:lain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Req
+  | SF:uest")%r(RTSPRequest,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-
+  | SF:Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n40
+  | SF:0\x20Bad\x20Request")%r(Help,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n
+  | SF:Content-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r
+  | SF:\n\r\n400\x20Bad\x20Request");
+  | 
+  | Nmap scan report for www.thinknet.online (64.29.17.65)
+  | Host is up (0.010s latency).
+  | Other addresses for www.thinknet.online (not scanned): 64.29.17.1
+  | Not shown: 998 filtered tcp ports (no-response)
+  | PORT    STATE SERVICE  VERSION
+  | 80/tcp  open  http     Vercel
+  | 443/tcp open  ssl/http Golang net/http server
+  | 2 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+  | ==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+  | SF-Port80-TCP:V=7.99%I=7%D=4/13%Time=69DC592C%P=arm-apple-darwin25.3.0%r(G
+  | SF:etRequest,8A,"HTTP/1\.0\x20308\x20Permanent\x20Redirect\r\nContent-Type
+  | SF::\x20text/plain\r\nLocation:\x20https:///\r\nRefresh:\x200;url=https://
+  | SF:/\r\nserver:\x20Vercel\r\n\r\nRedirecting\.\.\.")%r(HTTPOptions,8A,"HTT
+  | SF:P/1\.0\x20308\x20Permanent\x20Redirect\r\nContent-Type:\x20text/plain\r
+  | SF:\nLocation:\x20https:///\r\nRefresh:\x200;url=https:///\r\nserver:\x20V
+  | SF:ercel\r\n\r\nRedirecting\.\.\.")%r(FourOhFourRequest,D0,"HTTP/1\.0\x203
+  | SF:08\x20Permanent\x20Redirect\r\nContent-Type:\x20text/plain\r\nLocation:
+  | SF:\x20https:///nice%20ports%2C/Tri%6Eity\.txt%2ebak\r\nRefresh:\x200;url=
+  | SF:https:///nice%20ports%2C/Tri%6Eity\.txt%2ebak\r\nserver:\x20Vercel\r\n\
+  | SF:r\nRedirecting\.\.\.");
+  | ==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+  | SF-Port443-TCP:V=7.99%T=SSL%I=7%D=4/13%Time=69DC5932%P=arm-apple-darwin25.
+  | SF:3.0%r(GetRequest,1B3,"HTTP/1\.0\x20404\x20Not\x20Found\r\nCache-Control
+  | SF::\x20public,\x20max-age=0,\x20must-revalidate\r\nContent-Length:\x20107
+  | SF:\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nDate:\x20Mon,\x201
+  | SF:3\x20Apr\x202026\x2002:47:14\x20GMT\r\nServer:\x20Vercel\r\nStrict-Tran
+  | SF:sport-Security:\x20max-age=63072000\r\nX-Vercel-Error:\x20DEPLOYMENT_NO
+  | SF:T_FOUND\r\nX-Vercel-Id:\x20bom1::l4j8f-1776048434371-0edf47e3e280\r\n\r
+  | SF:\nThe\x20deployment\x20could\x20not\x20be\x20found\x20on\x20Vercel\.\n\
+  | SF:nDEPLOYMENT_NOT_FOUND\n\nbom1::l4j8f-1776048434371-0edf47e3e280\n")%r(H
+  | SF:TTPOptions,1B3,"HTTP/1\.0\x20404\x20Not\x20Found\r\nCache-Control:\x20p
+  | SF:ublic,\x20max-age=0,\x20must-revalidate\r\nContent-Length:\x20107\r\nCo
+  | SF:ntent-Type:\x20text/plain;\x20charset=utf-8\r\nDate:\x20Mon,\x2013\x20A
+  | SF:pr\x202026\x2002:47:14\x20GMT\r\nServer:\x20Vercel\r\nStrict-Transport-
+  | SF:Security:\x20max-age=63072000\r\nX-Vercel-Error:\x20DEPLOYMENT_NOT_FOUN
+  | SF:D\r\nX-Vercel-Id:\x20bom1::c52jf-1776048434474-e854a4fd148b\r\n\r\nThe\
+  | SF:x20deployment\x20could\x20not\x20be\x20found\x20on\x20Vercel\.\n\nDEPLO
+  | SF:YMENT_NOT_FOUND\n\nbom1::c52jf-1776048434474-e854a4fd148b\n")%r(FourOhF
+  | SF:ourRequest,1B3,"HTTP/1\.0\x20404\x20Not\x20Found\r\nCache-Control:\x20p
+  | SF:ublic,\x20max-age=0,\x20must-revalidate\r\nContent-Length:\x20107\r\nCo
+  | SF:ntent-Type:\x20text/plain;\x20charset=utf-8\r\nDate:\x20Mon,\x2013\x20A
+  | SF:pr\x202026\x2002:47:14\x20GMT\r\nServer:\x20Vercel\r\nStrict-Transport-
+  | SF:Security:\x20max-age=63072000\r\nX-Vercel-Error:\x20DEPLOYMENT_NOT_FOUN
+  | SF:D\r\nX-Vercel-Id:\x20bom1::fb762-1776048434583-3ef0a447e346\r\n\r\nThe\
+  | SF:x20deployment\x20could\x20not\x20be\x20found\x20on\x20Vercel\.\n\nDEPLO
+  | SF:YMENT_NOT_FOUND\n\nbom1::fb762-1776048434583-3ef0a447e346\n")%r(Generic
+  | SF:Lines,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/p
+  | SF:lain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Req
+  | SF:uest")%r(RTSPRequest,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-
+  | SF:Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n40
+  | SF:0\x20Bad\x20Request")%r(Help,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n
+  | SF:Content-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r
+  | SF:\n\r\n400\x20Bad\x20Request");
+  | 
+  | Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+  | # Nmap done at Mon Apr 13 08:18:59 2026 -- 2 IP addresses (2 hosts up) scanned in 202.28 seconds
+  | s
+  | [DISCOVERED URLS]
+  | No URLs found.
+  | --- RAW OUTPUT END ---
+--------------------------------------------------
+[✅] Pipeline execution completed for thinknet.online.
+
+
+[🧠] Parsing raw recon pipeline output through LangChain/Ollama into structured JSON schemas...
+[✅] Successfully parsed JSON from LLM.
+INFO:     127.0.0.1:60691 - "POST /api/scan_domain_pipeline HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [55559]
