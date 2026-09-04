@@ -23,7 +23,7 @@ CREATE POLICY "Users can update their own profile" ON public.users FOR UPDATE US
 -- 2. SCAN JOBS
 -- ==========================================
 CREATE TABLE public.scan_jobs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   target_domain TEXT NOT NULL,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'failed')),
@@ -41,7 +41,7 @@ CREATE POLICY "Users can manage their own scan jobs" ON public.scan_jobs FOR ALL
 -- 3. ASSETS
 -- ==========================================
 CREATE TABLE public.assets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   scan_job_id UUID REFERENCES public.scan_jobs(id) ON DELETE CASCADE,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   asset_type TEXT NOT NULL CHECK (asset_type IN ('domain', 'subdomain', 'ip', 'service', 'api')),
@@ -60,7 +60,7 @@ CREATE POLICY "Users can manage their own assets" ON public.assets FOR ALL USING
 -- 4. FINDINGS
 -- ==========================================
 CREATE TABLE public.findings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   scan_job_id UUID REFERENCES public.scan_jobs(id) ON DELETE CASCADE,
   asset_id UUID REFERENCES public.assets(id) ON DELETE CASCADE,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
@@ -82,7 +82,7 @@ CREATE POLICY "Users can manage their own findings" ON public.findings FOR ALL U
 -- 5. RISK SCORES
 -- ==========================================
 CREATE TABLE public.risk_scores (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   target_domain TEXT NOT NULL,
   overall_score NUMERIC(5,2) NOT NULL,
@@ -99,7 +99,7 @@ CREATE POLICY "Users can view their own risk scores" ON public.risk_scores FOR S
 -- 6. ATTACK GRAPH
 -- ==========================================
 CREATE TABLE public.attack_graph (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   scan_job_id UUID REFERENCES public.scan_jobs(id) ON DELETE CASCADE,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   nodes JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -116,7 +116,7 @@ CREATE POLICY "Users can view their own attack graphs" ON public.attack_graph FO
 -- 7. CBOM REPORTS (Cyber Bill of Materials)
 -- ==========================================
 CREATE TABLE public.cbom_reports (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   scan_job_id UUID REFERENCES public.scan_jobs(id) ON DELETE CASCADE,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   report_url TEXT,
@@ -134,7 +134,7 @@ CREATE POLICY "Users can view their own cbom reports" ON public.cbom_reports FOR
 -- 8. AGENT ACTIVITY
 -- ==========================================
 CREATE TABLE public.agent_activity (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   scan_job_id UUID REFERENCES public.scan_jobs(id) ON DELETE CASCADE,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   tool_used TEXT NOT NULL,
@@ -153,7 +153,7 @@ CREATE POLICY "Users can view their own agent activity" ON public.agent_activity
 -- 9. AUDIT LOGS
 -- ==========================================
 CREATE TABLE public.audit_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
   action TEXT NOT NULL,
   resource_type TEXT NOT NULL,
