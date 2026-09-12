@@ -36,7 +36,7 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
       } else {
-        router.push("/");
+        router.push("/projects");
         router.refresh();
       }
     } catch (err) {

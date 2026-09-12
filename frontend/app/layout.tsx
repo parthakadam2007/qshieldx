@@ -2,14 +2,13 @@
 // OOP: Encapsulation — The layout encapsulates global setup and providers, hiding complexity from individual pages.
 
 import { Geist, Geist_Mono, Inter } from "next/font/google"
-import { AppSidebar } from "@/components/app-sidebar"
 import { Metadata } from "next"
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { GlobalDataProvider } from "@/app/context/GlobalDataContext"
+import { AppLayoutWrapper } from "@/components/app-layout-wrapper"
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
@@ -30,8 +29,6 @@ export const metadata: Metadata = {
 }
 
 
-import { ThemeToggle } from "@/components/theme-toggle"
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -47,21 +44,9 @@ export default function RootLayout({
         <GlobalDataProvider>
           <ThemeProvider>
             <TooltipProvider>
-              {/* Note: The Sidebar logic will handle its own visibility or we can wrap conditional logic here if it were a client component */}
-              <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset>
-                  <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-                    <div className="flex items-center gap-2 px-4 w-full justify-between">
-                      <SidebarTrigger className="-ml-1" />
-                      <ThemeToggle />
-                    </div>
-                  </header>
-                  <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-                    {children}
-                  </div>
-                </SidebarInset>
-              </SidebarProvider>
+              <AppLayoutWrapper>
+                {children}
+              </AppLayoutWrapper>
             </TooltipProvider>
           </ThemeProvider>
         </GlobalDataProvider>
