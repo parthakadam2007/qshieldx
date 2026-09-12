@@ -19,17 +19,17 @@ const seededOverviewData = {
   targets: [
     {
       id: "SCAN-QSX-2026-0001",
-      organizationName: "Razorpay Software Pvt. Ltd.",
-      name: "Razorpay Software Pvt. Ltd.",
+      organizationName: "mypay Software Pvt. Ltd.",
+      name: "mypay Software Pvt. Ltd.",
       status: "Completed",
       lastCompleted: "31 Aug 2026 · 07:42 PM IST",
     },
   ],
   assets: [
-    { name: "api.razorpay.com", type: "domain", artifact_type: "TLS endpoint", quantum_status: "Vulnerable", vulnerabilities: [{ severity: "critical", description: "RSA 2048 certificate in use" }] },
-    { name: "auth.razorpay.com", type: "domain", artifact_type: "TLS endpoint", quantum_status: "Vulnerable", vulnerabilities: [{ severity: "critical", description: "RSA 4096 certificate in use" }] },
-    { name: "vault.razorpay.com", type: "domain", artifact_type: "TLS endpoint", quantum_status: "Vulnerable", vulnerabilities: [{ severity: "high", description: "Legacy key management dependency" }] },
-    { name: "checkout.razorpay.com", type: "domain", artifact_type: "TLS endpoint", quantum_status: "At Risk", vulnerabilities: [{ severity: "high", description: "ECDSA curve migration pending" }] },
+    { name: "api.mypay.com", type: "domain", artifact_type: "TLS endpoint", quantum_status: "Vulnerable", vulnerabilities: [{ severity: "critical", description: "RSA 2048 certificate in use" }] },
+    { name: "auth.mypay.com", type: "domain", artifact_type: "TLS endpoint", quantum_status: "Vulnerable", vulnerabilities: [{ severity: "critical", description: "RSA 4096 certificate in use" }] },
+    { name: "vault.mypay.com", type: "domain", artifact_type: "TLS endpoint", quantum_status: "Vulnerable", vulnerabilities: [{ severity: "high", description: "Legacy key management dependency" }] },
+    { name: "checkout.mypay.com", type: "domain", artifact_type: "TLS endpoint", quantum_status: "At Risk", vulnerabilities: [{ severity: "high", description: "ECDSA curve migration pending" }] },
     { name: "payment-service", type: "service", artifact_type: "GitHub repository", quantum_status: "Vulnerable", vulnerabilities: [{ severity: "critical", description: "OpenSSL dependency remains unpatched" }] },
   ],
   scan: {

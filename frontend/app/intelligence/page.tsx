@@ -34,8 +34,8 @@ const TIMELINE_EVENTS = [
     runtime: "1.2s",
     confidence: 0.98,
     timestamp: "19:40",
-    result: "Scope confirmed: Razorpay enterprise perimeter and repository.",
-    payload: { mode: "Hybrid Discovery", domain: "razorpay.com", assets_expected: 148 }
+    result: "Scope confirmed: mypay enterprise perimeter and repository.",
+    payload: { mode: "Hybrid Discovery", domain: "mypay.com", assets_expected: 148 }
   },
   {
     id: 2,
@@ -70,8 +70,8 @@ const TIMELINE_EVENTS = [
     runtime: "42.0s",
     confidence: 0.99,
     timestamp: "19:41",
-    result: "TLS 1.1 found on api.razorpay.com.",
-    payload: { endpoint: "api.razorpay.com", finding: "TLS 1.1 enabled" }
+    result: "TLS 1.1 found on api.mypay.com.",
+    payload: { endpoint: "api.mypay.com", finding: "TLS 1.1 enabled" }
   }
 ]
 
@@ -79,7 +79,7 @@ const MOCK_LOGS = [
   "[19:40] PLANNER: Agent initialized Hybrid Discovery.",
   "[19:40] DISCOVERY: Subfinder discovered 34 subdomains.",
   "[19:41] NMAP_TLS: Identified 18 TLS services.",
-  "[19:41] TESTSSL: Found TLS 1.1 on api.razorpay.com.",
+  "[19:41] TESTSSL: Found TLS 1.1 on api.mypay.com.",
   "[19:42] CERT_PARSER: Extracted RSA-2048 certificates.",
   "[19:42] CRYPTOFINDER: Discovered crypto libraries.",
   "[19:42] GITLEAKS: Detected exposed AWS Access Key.",

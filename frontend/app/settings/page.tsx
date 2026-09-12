@@ -64,11 +64,11 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Organization Name</label>
-                <Input defaultValue={data.scan?.organization || "Razorpay Software Pvt. Ltd."} />
+                <Input defaultValue={data.scan?.organization || "mypay Software Pvt. Ltd."} />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Primary Domain</label>
-                <Input defaultValue={data.scan?.primaryDomain || "razorpay.com"} />
+                <Input defaultValue={data.scan?.primaryDomain || "mypay.com"} />
               </div>
             </CardContent>
           </Card>
@@ -78,7 +78,7 @@ export default function SettingsPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2"><Activity className="size-5 text-primary" /> SIH Demo Mode</CardTitle>
-                  <CardDescription>Run a deterministic enterprise scan using the Razorpay reference dataset.</CardDescription>
+                  <CardDescription>Run a deterministic enterprise scan using the mypay reference dataset.</CardDescription>
                 </div>
                 <button type="button" role="switch" aria-checked={isDemoMode} aria-label="Toggle SIH Demo Mode" onClick={() => setDemoMode(!isDemoMode)} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${isDemoMode ? "bg-primary" : "bg-muted"}`}>
                   <span className={`absolute top-1 size-4 rounded-full bg-white transition-transform ${isDemoMode ? "left-6" : "left-1"}`} />

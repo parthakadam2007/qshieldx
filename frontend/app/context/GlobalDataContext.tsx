@@ -67,11 +67,11 @@ const normalizeData = (result: any): GlobalDataState => ({
 
 function demoState(): GlobalDataState {
   const assetNames = [
-    ["payments.razorpay.com", "domain", "RSA-2048"],
-    ["api.razorpay.com", "domain", "RSA-2048"],
-    ["checkout.razorpay.com", "domain", "ECDSA P-256"],
-    ["merchant.razorpay.com", "domain", "RSA-2048"],
-    ["vault.razorpay.com", "domain", "RSA-4096"],
+    ["payments.mypay.com", "domain", "RSA-2048"],
+    ["api.mypay.com", "domain", "RSA-2048"],
+    ["checkout.mypay.com", "domain", "ECDSA P-256"],
+    ["merchant.mypay.com", "domain", "RSA-2048"],
+    ["vault.mypay.com", "domain", "RSA-4096"],
     ["auth-service", "service", "RSA-2048"],
     ["webhook-gateway", "service", "ECDSA P-256"],
     ["merchant-dashboard", "service", "ML-KEM"],

@@ -28,8 +28,8 @@ export default function QuantumRiskPage() {
 
   // Derived mock data for advanced PQC visualizations based on existing assets
   const algorithms = data.algorithms.length ? data.algorithms.map((item) => ({ algo: item.name, keySize: item.key_size, tls: item.used_by, cert: item.used_by, pqc: item.pqc_recommendation, status: item.quantum_vulnerability === "Low" ? "Safe" : item.quantum_vulnerability })) : [
-    { algo: "RSA-1024", keySize: "1024-bit", tls: "TLS 1.2", cert: "api.razorpay.com", pqc: "ML-KEM", status: "Critical" },
-    { algo: "RSA-2048", keySize: "2048-bit", tls: "TLS 1.3", cert: "payments.razorpay.com", pqc: "ML-KEM", status: "High" },
+    { algo: "RSA-1024", keySize: "1024-bit", tls: "TLS 1.2", cert: "api.mypay.com", pqc: "ML-KEM", status: "Critical" },
+    { algo: "RSA-2048", keySize: "2048-bit", tls: "TLS 1.3", cert: "payments.mypay.com", pqc: "ML-KEM", status: "High" },
     { algo: "ECC P-256", keySize: "256-bit", tls: "TLS 1.3", cert: "admin.acme.local", pqc: "ML-DSA (Dilithium)", status: "Medium" },
     { algo: "SHA-1", keySize: "160-bit", tls: "N/A", cert: "Legacy Codebase", pqc: "SHA-3", status: "Critical" },
     { algo: "AES-256-GCM", keySize: "256-bit", tls: "TLS 1.3", cert: "database.acme.internal", pqc: "None Required", status: "Safe" },

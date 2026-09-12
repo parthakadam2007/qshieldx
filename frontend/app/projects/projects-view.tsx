@@ -86,7 +86,7 @@ const initialProjects: ProjectItem[] = [
   },
   {
     id: "proj-2",
-    name: "qshieldx",
+    name: "mypay",
     status: "active",
     statusText: "Active · Quantum Ready",
     refId: "qsx-9904",

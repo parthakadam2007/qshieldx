@@ -74,7 +74,7 @@ export default function WizardPage() {
     setIndustry(data.scan.industry)
     setShelfLife([data.scan.shelfLifeYears])
     setCriticality(data.scan.businessCriticality.toLowerCase())
-    setSubdomains("auth.razorpay.com\ncheckout.razorpay.com\nvault.razorpay.com")
+    setSubdomains("auth.mypay.com\ncheckout.mypay.com\nvault.mypay.com")
   }, [isDemoMode, data.scan])
 
   const nextStep = () => setStep((s) => Math.min(s + 1, 4))
@@ -177,20 +177,20 @@ export default function WizardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Organization Name <span className="text-destructive">*</span></label>
-                      <Input value={orgName} onChange={e => setOrgName(e.target.value)} placeholder="Razorpay Software Pvt. Ltd." />
+                      <Input value={orgName} onChange={e => setOrgName(e.target.value)} placeholder="mypay Software Pvt. Ltd." />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Primary Domain <span className="text-destructive">*</span></label>
                       <div className="relative">
                         <Globe className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input className="pl-9" value={domain} onChange={e => setDomain(e.target.value)} placeholder="razorpay.com" />
+                        <Input className="pl-9" value={domain} onChange={e => setDomain(e.target.value)} placeholder="mypay.com" />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">GitHub Repository URL</label>
                       <div className="relative">
                         <Code className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input className="pl-9" value={repoUrl} onChange={e => setRepoUrl(e.target.value)} placeholder="https://github.com/razorpay/razorpay-payment-gateway" />
+                        <Input className="pl-9" value={repoUrl} onChange={e => setRepoUrl(e.target.value)} placeholder="https://github.com/mypay/mypay-payment-gateway" />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -293,7 +293,7 @@ export default function WizardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Additional Subdomains</label>
-                      <Textarea value={subdomains} onChange={e => setSubdomains(e.target.value)} placeholder="api.razorpay.com&#10;checkout.razorpay.com" className="h-24 resize-none" />
+                      <Textarea value={subdomains} onChange={e => setSubdomains(e.target.value)} placeholder="api.mypay.com&#10;checkout.mypay.com" className="h-24 resize-none" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">CIDR Allowlist</label>

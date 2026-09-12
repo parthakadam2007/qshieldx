@@ -37,7 +37,7 @@ export default function CBOMPage() {
     
     async function fetchReports() {
       if (isDemoMode && data.cbom) {
-        const demoReport = { id: data.scan.id, created_at: data.scan.completed, scan_jobs: { target_domain: data.scan.primaryDomain }, report_json: data.cbom, executive_summary: "Razorpay Software Pvt. Ltd. has 148 cryptographic assets across its enterprise payment platform. The scan identified 61 quantum-vulnerable components, 36 certificates, and 9 exposed secrets. Wave 1 should prioritize public payment and identity endpoints with hybrid ML-KEM and ML-DSA transitions." }
+        const demoReport = { id: data.scan.id, created_at: data.scan.completed, scan_jobs: { target_domain: data.scan.primaryDomain }, report_json: data.cbom, executive_summary: "mypay Software Pvt. Ltd. has 148 cryptographic assets across its enterprise payment platform. The scan identified 61 quantum-vulnerable components, 36 certificates, and 9 exposed secrets. Wave 1 should prioritize public payment and identity endpoints with hybrid ML-KEM and ML-DSA transitions." }
         setReports([demoReport])
         setSelectedReport(demoReport)
         setIsLoading(false)
@@ -70,7 +70,7 @@ export default function CBOMPage() {
       content = JSON.stringify(selectedReport.report_json, null, 2);
       mime = "application/json";
     } else if (format === 'CSV') {
-      content = "Asset,Type,Algorithm,Vulnerability\napi.razorpay.com,Certificate,RSA-2048,Critical";
+      content = "Asset,Type,Algorithm,Vulnerability\napi.mypay.com,Certificate,RSA-2048,Critical";
       mime = "text/csv";
     } else {
       content = `# CBOM Report\n\nGenerated for ${selectedReport.scan_jobs?.target_domain}\n`;
@@ -98,9 +98,9 @@ export default function CBOMPage() {
 
   // React Flow Mock Nodes
   const initialNodes = [
-    { id: '1', position: { x: 250, y: 0 }, data: { label: 'razorpay.com (Root)' }, style: { backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
-    { id: '2', position: { x: 100, y: 100 }, data: { label: 'api.razorpay.com (TLS 1.1)' }, style: { backgroundColor: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
-    { id: '3', position: { x: 400, y: 100 }, data: { label: 'checkout.razorpay.com (TLS 1.3)' }, style: { backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
+    { id: '1', position: { x: 250, y: 0 }, data: { label: 'mypay.com (Root)' }, style: { backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
+    { id: '2', position: { x: 100, y: 100 }, data: { label: 'api.mypay.com (TLS 1.1)' }, style: { backgroundColor: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
+    { id: '3', position: { x: 400, y: 100 }, data: { label: 'checkout.mypay.com (TLS 1.3)' }, style: { backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
     { id: '4', position: { x: 100, y: 200 }, data: { label: 'RSA-2048 Certificate' }, style: { backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
   ];
   const initialEdges = [
@@ -214,13 +214,13 @@ export default function CBOMPage() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-medium">api.razorpay.com:443</TableCell>
+                      <TableCell className="font-medium">api.mypay.com:443</TableCell>
                       <TableCell>TLS Endpoint</TableCell>
                       <TableCell className="font-mono text-xs">TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</TableCell>
                       <TableCell><Badge variant="outline">Secure</Badge></TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium">payments.razorpay.com:8443</TableCell>
+                      <TableCell className="font-medium">payments.mypay.com:8443</TableCell>
                       <TableCell>TLS Endpoint</TableCell>
                       <TableCell className="font-mono text-xs text-destructive">TLS_RSA_WITH_AES_128_CBC_SHA</TableCell>
                       <TableCell><Badge variant="destructive">Deprecated</Badge></TableCell>
