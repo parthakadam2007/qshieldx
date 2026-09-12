@@ -201,7 +201,7 @@ export default function ProjectsView() {
   const handleOpenProject = (project: ProjectItem) => {
     showToast(`Launching ${project.name} workspace...`)
     setTimeout(() => {
-      router.push("/")
+      router.push("/targets/new")
     }, 300)
   }
 
