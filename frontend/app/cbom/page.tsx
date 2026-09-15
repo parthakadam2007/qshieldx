@@ -23,7 +23,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ReactFlow, Background, Controls } from "@xyflow/react"
 import { useGlobalData } from "@/app/context/GlobalDataContext"
 import {seedCBOM} from "../seedData/cbom"
-import "@xyflow/react/dist/style.css"
+// import "@xyflow/react/dist/style.css"
 
 export default function CBOMPage() {
   const [reports, setReports] = React.useState<any[]>([])
