@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ReactFlow, Background, Controls } from "@xyflow/react"
 import { useGlobalData } from "@/app/context/GlobalDataContext"
+import {seedCBOM} from "../seedData/cbom"
 import "@xyflow/react/dist/style.css"
 
 export default function CBOMPage() {
@@ -31,6 +32,7 @@ export default function CBOMPage() {
   const [copied, setCopied] = React.useState(false)
   const { isDemoMode, data } = useGlobalData()
   const supabase = createClient()
+ 
 
   React.useEffect(() => {
     document.title = "Reports Center | QShieldX"
@@ -294,11 +296,11 @@ export default function CBOMPage() {
                  {copied ? 'Copied' : 'Copy JSON'}
                </Button>
              </div>
-             <pre className="p-4 overflow-auto text-xs font-mono text-green-400 flex-1 custom-scrollbar">
-               {selectedReport?.report_json 
-                 ? JSON.stringify(selectedReport.report_json, null, 2) 
-                 : `{\n  "bomFormat": "CycloneDX",\n  "specVersion": "1.7",\n  "serialNumber": "urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79",\n  "version": 1,\n  "metadata": {\n    "timestamp": "${new Date().toISOString()}",\n    "tools": [\n      {\n        "vendor": "QShieldX",\n        "name": "CBOM Generator",\n        "version": "1.0.0"\n      }\n    ]\n  }\n  // Run an actual scan to populate full CBOM data\n}`}
-             </pre>
+            <pre className="p-4 overflow-auto text-xs font-mono text-green-400 flex-1 custom-scrollbar">
+              {selectedReport?.report_json
+                ? JSON.stringify(selectedReport.report_json, null, 2)
+                : JSON.stringify(seedCBOM, null, 2)}
+            </pre>
           </div>
         </TabsContent>
         
