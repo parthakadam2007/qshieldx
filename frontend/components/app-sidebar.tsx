@@ -15,7 +15,8 @@ import {
   Network,
   Target,
   Shield,
-  User
+  User,
+  Lock
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -65,6 +66,11 @@ const navData = {
       title: "Reports",
       url: "/cbom",
       icon: BookOpen,
+    },
+    {
+      title: "Crypto Review",
+      url: "/crypto-review",
+      icon: Lock,
     },
     {
       title: "Settings",

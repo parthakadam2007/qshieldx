@@ -27,6 +27,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Boxes,
+  Lock,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -339,6 +340,20 @@ export default function ProjectsView() {
               </TooltipTrigger>
               <TooltipContent side="right" className="text-xs">
                 CBOM Reports
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => router.push("/crypto-review")}
+                  className="flex items-center justify-center size-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+                >
+                  <Lock className="size-4.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                Crypto Review
               </TooltipContent>
             </Tooltip>
           </nav>
