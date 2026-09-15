@@ -31,6 +31,8 @@ export default function WizardPage() {
   const { isDemoMode, data } = useGlobalData()
   const [step, setStep] = React.useState(1)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isBuildingCbom, setIsBuildingCbom] = React.useState(false)
+  const [cbomStep, setCbomStep] = React.useState(0)
 
   // Step 1 Form Data
   const [orgName, setOrgName] = React.useState("")
@@ -90,51 +92,122 @@ export default function WizardPage() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
-    if (isDemoMode) {
-      await new Promise((resolve) => setTimeout(resolve, 1200))
-      router.push("/intelligence")
-      return
-    }
-    try {
-      const payload = {
-        organization_name: orgName,
-        domain: domain,
-        repository_url: repoUrl,
-        industry: industry,
-        shelf_life_years: shelfLife[0],
-        business_criticality: criticality,
-        scan_configuration: {
-          scope,
-          engines,
-          subdomains,
-          cidr,
-          branch,
-          folder,
-          cloudProvider
-        }
-      }
+    setIsBuildingCbom(true)
+    setCbomStep(0)
 
-      const response = await fetch('/api/targets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+    // Animate through CBOM build steps then redirect
+    const stepDelays = [600, 1100, 800, 900, 600]
+    let acc = 0
+    stepDelays.forEach((delay, i) => {
+      acc += delay
+      setTimeout(() => setCbomStep(i + 1), acc)
+    })
 
-      if (response.ok) {
-        router.push("/targets")
-      } else {
-        alert("Failed to create scan job.")
-        setIsSubmitting(false)
-      }
-    } catch (err) {
-      console.error(err)
-      alert("Error reaching API.")
-      setIsSubmitting(false)
-    }
+    setTimeout(() => {
+      router.push("/")
+    }, 4000)
   }
 
   return (
     <div className="flex h-full flex-col max-w-5xl mx-auto w-full p-4 md:p-8">
+
+      {/* ── CBOM Building Overlay ── */}
+      {isBuildingCbom && (() => {
+        const cbomStages = [
+          { icon: Search,     label: "Resolving asset scope & endpoints"       },
+          { icon: Binary,     label: "Extracting cryptographic primitives"      },
+          { icon: FileJson,   label: "Mapping algorithm dependencies (CBOM)"   },
+          { icon: ScanLine,   label: "Running quantum-risk classification"      },
+          { icon: ShieldCheck,label: "Finalising security posture report"       },
+        ]
+        const progress = Math.round((cbomStep / cbomStages.length) * 100)
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <Card className="w-full max-w-md mx-4 shadow-2xl border-border">
+              <CardHeader className="pb-3 text-center">
+                {/* Animated shield icon */}
+                <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+                  <ShieldCheck className="size-7 text-primary animate-pulse" />
+                </div>
+                <CardTitle className="text-xl font-semibold">Building Cryptographic BOM</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Initialising secure discovery pipeline…
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-5 pb-6">
+                {/* Progress bar */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Overall progress</span>
+                    <span className="font-medium tabular-nums">{progress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Stage list */}
+                <ul className="space-y-2.5">
+                  {cbomStages.map((stage, i) => {
+                    const Icon = stage.icon
+                    const done    = cbomStep > i
+                    const current = cbomStep === i
+                    return (
+                      <li key={i} className="flex items-center gap-3">
+                        <span
+                          className={[
+                            "flex size-7 shrink-0 items-center justify-center rounded-full border text-[11px] transition-colors duration-500",
+                            done    ? "border-primary bg-primary text-primary-foreground"         : "",
+                            current ? "border-primary/50 bg-primary/10 text-primary animate-pulse" : "",
+                            !done && !current ? "border-border bg-muted text-muted-foreground"     : "",
+                          ].join(" ")}
+                        >
+                          {done ? (
+                            <CheckCircle2 className="size-3.5" />
+                          ) : (
+                            <Icon className="size-3.5" />
+                          )}
+                        </span>
+                        <span
+                          className={[
+                            "text-xs leading-tight transition-colors duration-500",
+                            done    ? "text-foreground font-medium" : "",
+                            current ? "text-foreground font-medium" : "",
+                            !done && !current ? "text-muted-foreground" : "",
+                          ].join(" ")}
+                        >
+                          {stage.label}
+                        </span>
+                        {done && (
+                          <Badge variant="outline" className="ml-auto shrink-0 text-[10px] px-1.5 py-0 border-primary/30 text-primary">
+                            done
+                          </Badge>
+                        )}
+                        {current && (
+                          <Badge variant="outline" className="ml-auto shrink-0 text-[10px] px-1.5 py-0 border-amber-400/40 text-amber-500">
+                            running
+                          </Badge>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </CardContent>
+
+              <CardFooter className="justify-center pt-0 pb-5">
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Redirecting to dashboard once complete…
+                </p>
+              </CardFooter>
+            </Card>
+          </div>
+        )
+      })()}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Cryptographic Discovery Wizard</h1>
         <p className="text-muted-foreground">Configure the intelligent agent pipeline for comprehensive cryptographic inventory mapping.</p>
