@@ -23,7 +23,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ReactFlow, Background, Controls } from "@xyflow/react"
 import { useGlobalData } from "@/app/context/GlobalDataContext"
 import {seedCBOM} from "../seedData/cbom"
-// import "@xyflow/react/dist/style.css"
+import {initialNodes , initialEdges,baseNodeStyle} from "../seedData/node"
+import {ExecutiveSummary} from "../cbom/ExecutiveSummary"
+import {Property, AlgorithmProperties , CryptoProperties,CBOMComponent} from "./CbomInterfaces"
+
+// @ts-expect-error
+import "@xyflow/react/dist/style.css"
+
+
 
 export default function CBOMPage() {
   const [reports, setReports] = React.useState<any[]>([])
@@ -31,7 +38,11 @@ export default function CBOMPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [copied, setCopied] = React.useState(false)
   const { isDemoMode, data } = useGlobalData()
-  const supabase = createClient()
+  const supabase = createClient();
+  const components: CBOMComponent[] =
+  selectedReport?.report_json?.components ??
+  seedCBOM?.components ??
+  [];
  
 
   React.useEffect(() => {
@@ -97,19 +108,6 @@ export default function CBOMPage() {
       setTimeout(() => setCopied(false), 2000)
     }
   }
-
-  // React Flow Mock Nodes
-  const initialNodes = [
-    { id: '1', position: { x: 250, y: 0 }, data: { label: 'mypay.com (Root)' }, style: { backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
-    { id: '2', position: { x: 100, y: 100 }, data: { label: 'api.mypay.com (TLS 1.1)' }, style: { backgroundColor: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
-    { id: '3', position: { x: 400, y: 100 }, data: { label: 'checkout.mypay.com (TLS 1.3)' }, style: { backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
-    { id: '4', position: { x: 100, y: 200 }, data: { label: 'RSA-2048 Certificate' }, style: { backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px' } },
-  ];
-  const initialEdges = [
-    { id: 'e1-2', source: '1', target: '2', animated: true },
-    { id: 'e1-3', source: '1', target: '3' },
-    { id: 'e2-4', source: '2', target: '4', animated: true, style: { stroke: '#ef4444' } },
-  ];
 
   return (
     <div className="flex h-full flex-col gap-6 p-4 md:p-8 animate-in fade-in duration-300">
@@ -192,58 +190,118 @@ export default function CBOMPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0 flex-1 flex overflow-hidden">
-              {/* Tree Sidebar */}
-              <div className="w-64 border-r p-4 overflow-y-auto bg-muted/10 shrink-0">
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 font-medium"><ChevronRight className="size-4" /> {selectedReport?.scan_jobs?.target_domain || "Domain Root"}</div>
-                  <div className="pl-6 space-y-2">
-                    <div className="flex items-center gap-2 text-muted-foreground"><ChevronRight className="size-4" /> Network Services</div>
-                    <div className="flex items-center gap-2 text-muted-foreground"><ChevronRight className="size-4" /> Source Code Repos</div>
-                    <div className="flex items-center gap-2 text-muted-foreground"><ChevronRight className="size-4" /> Cloud Infrastructure</div>
-                  </div>
-                </div>
-              </div>
-              {/* Table Area */}
-              <div className="flex-1 p-4 overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Component</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Algorithm</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">api.mypay.com:443</TableCell>
-                      <TableCell>TLS Endpoint</TableCell>
-                      <TableCell className="font-mono text-xs">TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</TableCell>
-                      <TableCell><Badge variant="outline">Secure</Badge></TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">payments.mypay.com:8443</TableCell>
-                      <TableCell>TLS Endpoint</TableCell>
-                      <TableCell className="font-mono text-xs text-destructive">TLS_RSA_WITH_AES_128_CBC_SHA</TableCell>
-                      <TableCell><Badge variant="destructive">Deprecated</Badge></TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">auth_service/jwt.js</TableCell>
-                      <TableCell>Source Code</TableCell>
-                      <TableCell className="font-mono text-xs">HMAC-SHA256 (Hardcoded Key)</TableCell>
-                      <TableCell><Badge variant="destructive">Critical</Badge></TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
+            <div className="flex-1 p-4 overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Component</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Algorithm</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {components.map((component: CBOMComponent) => {
+                    const properties = Object.fromEntries(
+                      (component.properties ?? []).map(
+                        ({ name, value }) => [name, value]
+                      )
+                    );
+
+                    const algorithm =
+                      component.cryptoProperties
+                        ?.algorithmProperties
+                        ?.parameterSetIdentifier ??
+                      component.name;
+
+                    const type =
+                      component.cryptoProperties
+                        ?.algorithmProperties
+                        ?.primitive ??
+                      component.cryptoProperties?.assetType ??
+                      component.type;
+
+                    const status =
+                      properties["quantum.status"] ??
+                      properties["security.status"] ??
+                      "unknown";
+
+                    const priority =
+                      properties["migration.priority"] ??
+                      "—";
+
+                    return (
+                      <TableRow key={component["bom-ref"]}>
+
+                        <TableCell className="font-medium">
+                          {component.name}
+
+                          {component.version && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              v{component.version}
+                            </span>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          {type}
+                        </TableCell>
+
+                        <TableCell className="font-mono text-xs">
+                          {algorithm}
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge
+                            variant={
+                              status === "vulnerable" ||
+                              status === "legacy"
+                                ? "destructive"
+                                : "outline"
+                            }
+                          >
+                            {status}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge
+                            variant={
+                              priority === "critical"
+                                ? "destructive"
+                                : "outline"
+                            }
+                          >
+                            {priority}
+                          </Badge>
+                        </TableCell>
+
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* TAB 2: Dependency Graph */}
-        <TabsContent value="graph" className="flex-1 mt-0 outline-none h-[500px]">
+        <TabsContent
+          value="graph"
+          className="flex-1 mt-0 outline-none h-[500px]"
+        >
           <div className="h-full rounded-md border bg-black/5 dark:bg-black/20">
-            <ReactFlow nodes={initialNodes} edges={initialEdges} fitView>
+            <ReactFlow
+              nodes={initialNodes}
+              edges={initialEdges}
+              fitView
+              fitViewOptions={{
+                padding: 0.2,
+              }}
+            >
               <Background gap={12} size={1} />
               <Controls />
             </ReactFlow>
@@ -251,40 +309,15 @@ export default function CBOMPage() {
         </TabsContent>
 
         {/* TAB 3: Executive Summary */}
-        <TabsContent value="summary" className="flex-1 mt-0 outline-none">
-          <Card className="border-primary/20 bg-background/50 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="text-lg">AI-Generated Migration Summary</CardTitle>
-              <CardDescription>Synthesized analysis of the CBOM by the QShieldX Reporting Agent.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                {selectedReport?.executive_summary ? (
-                  <div className="whitespace-pre-wrap">{selectedReport.executive_summary}</div>
-                ) : (
-                  <div>
-                    <h3>Overview</h3>
-                    <p>The cryptographic discovery agent has successfully mapped the target infrastructure. The organization relies heavily on classical public-key cryptography which will be vulnerable to Cryptographically Relevant Quantum Computers (CRQC).</p>
-                    
-                    <h3>Key Findings</h3>
-                    <ul>
-                      <li><strong>22</strong> instances of RSA-1024/2048 detected in X.509 certificates.</li>
-                      <li><strong>3</strong> hardcoded symmetric keys found in source code repositories.</li>
-                      <li><strong>TLS 1.2</strong> is the predominant transport protocol; 14 endpoints still support deprecated TLS 1.0/1.1.</li>
-                    </ul>
-
-                    <h3>Post-Quantum Migration Priorities</h3>
-                    <ol>
-                      <li>Upgrade internal CA to issue hybrid ML-KEM/RSA certificates.</li>
-                      <li>Rotate hardcoded secrets in `auth_service` and implement a KMS.</li>
-                      <li>Disable all TLS 1.1 cipher suites across edge routers.</li>
-                    </ol>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent
+        value="summary"
+        className="flex-1 mt-0 outline-none overflow-auto"
+      >
+        <ExecutiveSummary
+          selectedReport={selectedReport}
+          seedCBOM={seedCBOM}
+        />
+      </TabsContent>
 
         {/* TAB 4: Raw CBOM JSON */}
         <TabsContent value="raw" className="flex-1 mt-0 outline-none">
