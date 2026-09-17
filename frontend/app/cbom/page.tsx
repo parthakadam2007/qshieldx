@@ -64,7 +64,7 @@ import {seedCBOM} from "../seedData/cbom"
 import {initialNodes , initialEdges,baseNodeStyle} from "../seedData/node"
 import {ExecutiveSummary} from "../cbom/ExecutiveSummary"
 import {Property, AlgorithmProperties , CryptoProperties,CBOMComponent} from "./CbomInterfaces"
-
+// @ts-expect-error The package provides the stylesheet at runtime but does not expose a TypeScript declaration for it.
 import "@xyflow/react/dist/style.css"
 
 
