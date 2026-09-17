@@ -1,9 +1,46 @@
 "use client"
 
 import * as React from "react"
-import { 
-  Shield, Download, FileJson, GitCommit, SearchCheck, 
-  Layers, ExternalLink, Search, Network, FileText, ChevronRight, Check
+import {
+  Activity,
+  AlertCircle,
+  Binary,
+  BrainCircuit,
+  Boxes,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  CircleDot,
+  Check,
+  Clock,
+  Cpu,
+  Database,
+  Download,
+  Eye,
+  FileJson,
+  FileText,
+  Gauge,
+  GitBranch,
+  GitCommit,
+  KeyRound,
+  Layers,
+  LockKeyhole,
+  Network,
+  Radio,
+  Radar,
+  ScanSearch,
+  Search,
+  Server,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  Terminal,
+  Timer,
+  TrendingUp,
+  Workflow,
+  X,
+  Zap,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase"
 import {
@@ -20,15 +57,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ReactFlow, Background, Controls } from "@xyflow/react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ReactFlow, Background, Controls ,MiniMap } from "@xyflow/react"
 import { useGlobalData } from "@/app/context/GlobalDataContext"
 import {seedCBOM} from "../seedData/cbom"
 import {initialNodes , initialEdges,baseNodeStyle} from "../seedData/node"
 import {ExecutiveSummary} from "../cbom/ExecutiveSummary"
 import {Property, AlgorithmProperties , CryptoProperties,CBOMComponent} from "./CbomInterfaces"
 
-// @ts-expect-error
 import "@xyflow/react/dist/style.css"
+
+
+
 
 
 
@@ -43,6 +83,17 @@ export default function CBOMPage() {
   selectedReport?.report_json?.components ??
   seedCBOM?.components ??
   [];
+
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [statusFilter, setStatusFilter] = React.useState("all")
+  const [priorityFilter, setPriorityFilter] = React.useState("all")
+  const [typeFilter, setTypeFilter] = React.useState("all")
+  const [algorithmFilter, setAlgorithmFilter] = React.useState("all")
+
+  const [explorerView, setExplorerView] =
+    React.useState<"table" | "graph">("table")
+
+    
  
 
   React.useEffect(() => {
@@ -108,6 +159,241 @@ export default function CBOMPage() {
       setTimeout(() => setCopied(false), 2000)
     }
   }
+
+const filteredComponents = React.useMemo(() => {
+  return components.filter((component: CBOMComponent) => {
+
+    const properties = Object.fromEntries(
+      (component.properties ?? []).map(
+        ({ name, value }) => [name, value]
+      )
+    )
+
+    const algorithm =
+      component.cryptoProperties
+        ?.algorithmProperties
+        ?.parameterSetIdentifier ??
+      component.name
+
+    const type =
+      component.cryptoProperties
+        ?.algorithmProperties
+        ?.primitive ??
+      component.cryptoProperties?.assetType ??
+      component.type
+
+    const status =
+      properties["quantum.status"] ??
+      properties["security.status"] ??
+      "unknown"
+
+    const priority =
+      properties["migration.priority"] ??
+      "—"
+
+
+    /* Search */
+
+    const search = searchQuery.toLowerCase()
+
+    const matchesSearch =
+      !search ||
+      component.name
+        ?.toLowerCase()
+        .includes(search) ||
+      algorithm
+        ?.toLowerCase()
+        .includes(search) ||
+      type
+        ?.toLowerCase()
+        .includes(search)
+
+
+    /* Status */
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      status.toLowerCase() ===
+        statusFilter.toLowerCase()
+
+
+    /* Priority */
+
+    const matchesPriority =
+      priorityFilter === "all" ||
+      priority.toLowerCase() ===
+        priorityFilter.toLowerCase()
+
+
+    /* Type */
+
+    const normalizedType =
+      type.toLowerCase()
+
+    const matchesType =
+      typeFilter === "all" ||
+      normalizedType.includes(
+        typeFilter.toLowerCase()
+      )
+
+
+    /* Algorithm */
+
+    const matchesAlgorithm =
+      algorithmFilter === "all" ||
+      algorithm
+        .toLowerCase()
+        .includes(
+          algorithmFilter.toLowerCase()
+        )
+
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesPriority &&
+      matchesType &&
+      matchesAlgorithm
+    )
+  })
+}, [
+  components,
+  searchQuery,
+  statusFilter,
+  priorityFilter,
+  typeFilter,
+  algorithmFilter,
+])
+
+
+const activeFilterCount =
+  Number(statusFilter !== "all") +
+  Number(priorityFilter !== "all") +
+  Number(typeFilter !== "all") +
+  Number(algorithmFilter !== "all") +
+  Number(searchQuery.trim() !== "")
+
+  const graphNodes = React.useMemo(() => {
+
+  const centerX = 500
+  const centerY = 300
+
+  return filteredComponents.map(
+    (component: CBOMComponent, index: number) => {
+
+      const properties = Object.fromEntries(
+        (component.properties ?? []).map(
+          ({ name, value }) => [name, value]
+        )
+      )
+
+      const status =
+        properties["quantum.status"] ??
+        properties["security.status"] ??
+        "unknown"
+
+      const algorithm =
+        component.cryptoProperties
+          ?.algorithmProperties
+          ?.parameterSetIdentifier ??
+        component.name
+
+      const statusColor =
+        status === "vulnerable"
+          ? "#ef4444"
+          : status === "legacy"
+            ? "#f59e0b"
+            : status === "quantum-resistant"
+              ? "#22c55e"
+              : "#8b5cf6"
+
+
+      const angle =
+        (index / Math.max(filteredComponents.length, 1)) *
+        Math.PI *
+        2
+
+      const radius =
+        filteredComponents.length > 8
+          ? 260
+          : 190
+
+
+      return {
+        id: component["bom-ref"],
+
+        position: {
+          x:
+            centerX +
+            Math.cos(angle) * radius,
+          y:
+            centerY +
+            Math.sin(angle) * radius,
+        },
+
+        data: {
+          label: (
+            <div className="min-w-[150px]">
+
+              <div className="flex items-center gap-2">
+
+                <div
+                  className="size-2.5 rounded-full"
+                  style={{
+                    background: statusColor,
+                  }}
+                />
+
+                <span className="truncate text-xs font-semibold">
+                  {component.name}
+                </span>
+
+              </div>
+
+              <div className="mt-1 text-[10px] text-muted-foreground">
+                {algorithm}
+              </div>
+
+            </div>
+          ),
+        },
+
+        style: {
+          width: 190,
+          padding: "10px 12px",
+          borderRadius: 12,
+          border: `1px solid ${statusColor}55`,
+          background: "hsl(var(--card))",
+          boxShadow: `0 0 20px ${statusColor}18`,
+        },
+      }
+    }
+  )
+
+}, [filteredComponents])
+
+const graphEdges = React.useMemo(() => {
+
+  const edges = []
+
+  for (let i = 1; i < filteredComponents.length; i++) {
+
+    edges.push({
+      id: `edge-${i}`,
+      source: filteredComponents[0]["bom-ref"],
+      target: filteredComponents[i]["bom-ref"],
+      animated: true,
+      style: {
+        strokeWidth: 1.5,
+        opacity: 0.45,
+      },
+    })
+
+  }
+
+  return edges
+
+}, [filteredComponents])
 
   return (
     <div className="flex h-full flex-col gap-6 p-4 md:p-8 animate-in fade-in duration-300">
@@ -175,118 +461,605 @@ export default function CBOMPage() {
         </TabsList>
         
         {/* TAB 1: CBOM Explorer */}
-        <TabsContent value="explorer" className="flex-1 mt-0 outline-none">
-          <Card className="border-primary/20 bg-background/50 backdrop-blur h-full flex flex-col min-h-[500px]">
-            <CardHeader className="pb-3 border-b shrink-0">
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="text-sm font-semibold">Cryptographic Asset Inventory</CardTitle>
-                  <CardDescription className="text-xs">Tree viewer of discovered protocols, keys, and certificates.</CardDescription>
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search CBOM..." className="pl-9 w-64 h-9" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 flex overflow-hidden">
-            <div className="flex-1 p-4 overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Component</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Algorithm</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                  </TableRow>
-                </TableHeader>
+    <TabsContent
+  value="explorer"
+  className="flex-1 mt-0 outline-none min-h-0"
+>
+  <Card className="border-primary/20 bg-background/50 backdrop-blur h-full flex flex-col min-h-[500px] overflow-hidden">
 
-                <TableBody>
-                  {components.map((component: CBOMComponent) => {
+    {/* =====================================================
+        HEADER
+    ===================================================== */}
+
+    <CardHeader className="pb-3 border-b shrink-0">
+
+      <div className="flex flex-col gap-4">
+
+        {/* Title */}
+
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+
+          <div>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Binary className="size-4 text-primary" />
+              Cryptographic Asset Inventory
+            </CardTitle>
+
+            <CardDescription className="text-xs">
+              Explore discovered protocols, keys, certificates, and
+              cryptographic dependencies.
+            </CardDescription>
+          </div>
+
+          {/* View Toggle */}
+
+          <div className="flex items-center gap-2">
+
+            <Button
+              size="sm"
+              variant={explorerView === "table" ? "default" : "outline"}
+              className="h-8 gap-2"
+              onClick={() => setExplorerView("table")}
+            >
+              <Database className="size-3.5" />
+              Table
+            </Button>
+
+            <Button
+              size="sm"
+              variant={explorerView === "graph" ? "default" : "outline"}
+              className="h-8 gap-2"
+              onClick={() => setExplorerView("graph")}
+            >
+              <Network className="size-3.5" />
+              Graph
+            </Button>
+
+          </div>
+
+        </div>
+
+
+        {/* =================================================
+            FILTER BAR
+        ================================================= */}
+
+        <div className="flex flex-wrap items-center gap-2">
+
+          {/* Search */}
+
+          <div className="relative min-w-[220px] flex-1">
+
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search component, algorithm..."
+              className="h-9 pl-9"
+            />
+
+          </div>
+
+
+          {/* Status */}
+
+          <Select
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+          >
+            <SelectTrigger className="h-9 w-[145px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+
+            <SelectContent>
+
+              <SelectItem value="all">
+                All Status
+              </SelectItem>
+
+              <SelectItem value="vulnerable">
+                Vulnerable
+              </SelectItem>
+
+              <SelectItem value="legacy">
+                Legacy
+              </SelectItem>
+
+              <SelectItem value="quantum-resistant">
+                Quantum Resistant
+              </SelectItem>
+
+              <SelectItem value="acceptable">
+                Acceptable
+              </SelectItem>
+
+              <SelectItem value="unknown">
+                Unknown
+              </SelectItem>
+
+            </SelectContent>
+          </Select>
+
+
+          {/* Priority */}
+
+          <Select
+            value={priorityFilter}
+            onValueChange={setPriorityFilter}
+          >
+            <SelectTrigger className="h-9 w-[135px]">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+
+            <SelectContent>
+
+              <SelectItem value="all">
+                All Priority
+              </SelectItem>
+
+              <SelectItem value="critical">
+                Critical
+              </SelectItem>
+
+              <SelectItem value="high">
+                High
+              </SelectItem>
+
+              <SelectItem value="medium">
+                Medium
+              </SelectItem>
+
+              <SelectItem value="low">
+                Low
+              </SelectItem>
+
+            </SelectContent>
+          </Select>
+
+
+          {/* Asset Type */}
+
+          <Select
+            value={typeFilter}
+            onValueChange={setTypeFilter}
+          >
+            <SelectTrigger className="h-9 w-[135px]">
+              <SelectValue placeholder="Asset Type" />
+            </SelectTrigger>
+
+            <SelectContent>
+
+              <SelectItem value="all">
+                All Types
+              </SelectItem>
+
+              <SelectItem value="algorithm">
+                Algorithm
+              </SelectItem>
+
+              <SelectItem value="protocol">
+                Protocol
+              </SelectItem>
+
+              <SelectItem value="certificate">
+                Certificate
+              </SelectItem>
+
+              <SelectItem value="key">
+                Key
+              </SelectItem>
+
+              <SelectItem value="other">
+                Other
+              </SelectItem>
+
+            </SelectContent>
+          </Select>
+
+
+          {/* Algorithm */}
+
+          <Select
+            value={algorithmFilter}
+            onValueChange={setAlgorithmFilter}
+          >
+            <SelectTrigger className="h-9 w-[140px]">
+              <SelectValue placeholder="Algorithm" />
+            </SelectTrigger>
+
+            <SelectContent>
+
+              <SelectItem value="all">
+                All Algorithms
+              </SelectItem>
+
+              <SelectItem value="RSA">
+                RSA
+              </SelectItem>
+
+              <SelectItem value="ECC">
+                ECC
+              </SelectItem>
+
+              <SelectItem value="AES">
+                AES
+              </SelectItem>
+
+              <SelectItem value="SHA">
+                SHA
+              </SelectItem>
+
+              <SelectItem value="ML-KEM">
+                ML-KEM
+              </SelectItem>
+
+              <SelectItem value="ML-DSA">
+                ML-DSA
+              </SelectItem>
+
+            </SelectContent>
+          </Select>
+
+
+          {/* Clear */}
+
+          {(searchQuery ||
+            statusFilter !== "all" ||
+            priorityFilter !== "all" ||
+            typeFilter !== "all" ||
+            algorithmFilter !== "all") && (
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-2 text-muted-foreground"
+              onClick={() => {
+                setSearchQuery("")
+                setStatusFilter("all")
+                setPriorityFilter("all")
+                setTypeFilter("all")
+                setAlgorithmFilter("all")
+              }}
+            >
+              <X className="size-3.5" />
+              Clear
+            </Button>
+
+          )}
+
+        </div>
+
+
+        {/* =================================================
+            FILTER SUMMARY
+        ================================================= */}
+
+        <div className="flex flex-wrap items-center justify-between gap-2">
+
+          <div className="flex items-center gap-2">
+
+            <Badge
+              variant="secondary"
+              className="gap-1.5"
+            >
+              <ScanSearch className="size-3" />
+              {filteredComponents.length} assets
+            </Badge>
+
+            {activeFilterCount > 0 && (
+
+              <Badge
+                variant="outline"
+                className="border-primary/30 bg-primary/5 text-primary"
+              >
+                {activeFilterCount} filters active
+              </Badge>
+
+            )}
+
+          </div>
+
+
+          <span className="text-[10px] text-muted-foreground">
+            Showing {filteredComponents.length} of {components.length} assets
+          </span>
+
+        </div>
+
+      </div>
+
+    </CardHeader>
+
+
+    {/* =====================================================
+        CONTENT
+    ===================================================== */}
+
+    <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
+
+
+      {/* ===================================================
+          TABLE VIEW
+      =================================================== */}
+
+      {explorerView === "table" && (
+
+        <div className="h-full overflow-auto">
+
+          <Table>
+
+            <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
+
+              <TableRow>
+
+                <TableHead className="pl-5">
+                  Component
+                </TableHead>
+
+                <TableHead>
+                  Type
+                </TableHead>
+
+                <TableHead>
+                  Algorithm
+                </TableHead>
+
+                <TableHead>
+                  Status
+                </TableHead>
+
+                <TableHead>
+                  Priority
+                </TableHead>
+
+              </TableRow>
+
+            </TableHeader>
+
+
+            <TableBody>
+
+              {filteredComponents.length === 0 ? (
+
+                <TableRow>
+
+                  <TableCell
+                    colSpan={5}
+                    className="h-40 text-center"
+                  >
+
+                    <div className="flex flex-col items-center justify-center gap-2">
+
+                      <Search className="size-8 text-muted-foreground/40" />
+
+                      <p className="text-sm font-medium">
+                        No assets found
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        Try changing your filters or search query.
+                      </p>
+
+                    </div>
+
+                  </TableCell>
+
+                </TableRow>
+
+              ) : (
+
+                filteredComponents.map(
+                  (component: CBOMComponent) => {
+
                     const properties = Object.fromEntries(
                       (component.properties ?? []).map(
-                        ({ name, value }) => [name, value]
+                        ({ name, value }) => [
+                          name,
+                          value,
+                        ]
                       )
-                    );
+                    )
 
                     const algorithm =
                       component.cryptoProperties
                         ?.algorithmProperties
                         ?.parameterSetIdentifier ??
-                      component.name;
+                      component.name
 
-                    const type =
+                    const primitive =
                       component.cryptoProperties
                         ?.algorithmProperties
-                        ?.primitive ??
+                        ?.primitive
+
+                    const type =
+                      primitive ??
                       component.cryptoProperties?.assetType ??
-                      component.type;
+                      component.type
 
                     const status =
                       properties["quantum.status"] ??
                       properties["security.status"] ??
-                      "unknown";
+                      "unknown"
 
                     const priority =
                       properties["migration.priority"] ??
-                      "—";
+                      "—"
+
 
                     return (
-                      <TableRow key={component["bom-ref"]}>
 
-                        <TableCell className="font-medium">
-                          {component.name}
+                      <TableRow
+                        key={component["bom-ref"]}
+                        className="group transition-colors hover:bg-primary/5"
+                      >
 
-                          {component.version && (
-                            <span className="ml-2 text-xs text-muted-foreground">
-                              v{component.version}
-                            </span>
-                          )}
+                        {/* Component */}
+
+                        <TableCell className="pl-5">
+
+                          <div className="flex items-center gap-2">
+
+                            <div className="rounded-md bg-primary/10 p-1.5">
+
+                              <Binary className="size-3.5 text-primary" />
+
+                            </div>
+
+                            <div>
+
+                              <p className="font-medium">
+                                {component.name}
+                              </p>
+
+                              {component.version && (
+                                <span className="text-xs text-muted-foreground">
+                                  v{component.version}
+                                </span>
+                              )}
+
+                            </div>
+
+                          </div>
+
                         </TableCell>
+
+
+                        {/* Type */}
 
                         <TableCell>
-                          {type}
+
+                          <Badge
+                            variant="outline"
+                            className="text-[10px]"
+                          >
+                            {type}
+                          </Badge>
+
                         </TableCell>
+
+
+                        {/* Algorithm */}
 
                         <TableCell className="font-mono text-xs">
+
                           {algorithm}
+
                         </TableCell>
 
+
+                        {/* Status */}
+
                         <TableCell>
+
                           <Badge
                             variant={
                               status === "vulnerable" ||
                               status === "legacy"
                                 ? "destructive"
-                                : "outline"
+                                : status === "quantum-resistant"
+                                  ? "default"
+                                  : "outline"
+                            }
+                            className={
+                              status === "quantum-resistant"
+                                ? "bg-emerald-500 hover:bg-emerald-500"
+                                : ""
                             }
                           >
                             {status}
                           </Badge>
+
                         </TableCell>
 
+
+                        {/* Priority */}
+
                         <TableCell>
+
                           <Badge
                             variant={
                               priority === "critical"
                                 ? "destructive"
-                                : "outline"
+                                : priority === "high"
+                                  ? "secondary"
+                                  : "outline"
                             }
                           >
                             {priority}
                           </Badge>
+
                         </TableCell>
 
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
+                    )
+                  }
+                )
+
+              )}
+
+            </TableBody>
+
+          </Table>
+
+        </div>
+
+      )}
+
+
+      {/* ===================================================
+          GRAPH VIEW
+      =================================================== */}
+
+      {explorerView === "graph" && (
+
+        <div className="relative h-full w-full bg-muted/5">
+
+          <div className="absolute left-4 top-4 z-10">
+
+            <Badge
+              variant="outline"
+              className="gap-2 bg-background/90 backdrop-blur"
+            >
+              <Network className="size-3.5 text-primary" />
+
+              {filteredComponents.length} nodes
+
+            </Badge>
+
+          </div>
+
+
+          <ReactFlow
+            nodes={graphNodes}
+            edges={graphEdges}
+            fitView
+            fitViewOptions={{
+              padding: 0.2,
+            }}
+            className="bg-background/20"
+          >
+
+            <Background
+              gap={18}
+              size={1}
+            />
+
+            <Controls />
+
+            <MiniMap />
+
+          </ReactFlow>
+
+        </div>
+
+      )}
+
+    </CardContent>
+
+  </Card>
+</TabsContent>
 
         {/* TAB 2: Dependency Graph */}
         <TabsContent
