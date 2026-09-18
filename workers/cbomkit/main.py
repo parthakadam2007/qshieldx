@@ -8,7 +8,6 @@ import uuid
 from urllib import error as urlerror, parse, request
 
 import websocket
-
 from common.config import GITHUB_TOKEN
 from common.models import JobInstruction, Trace
 from common.worker import build_handle_instruction, run_worker

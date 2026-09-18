@@ -163,12 +163,34 @@ export default function CryptoReviewPage() {
       showToast("✓ Webhook ping received: 200 OK (38ms)")
     }, 800)
   }
+const fetchProducts = async () => {
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8000/make_isse",
+      {
+        method: "GET",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Failed to create issue");
+    }
+
+    console.log("Backend response:", data);
+
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
 
   // Finish Connection Flow
   const handleFinishConnection = () => {
     setIsConnected(true)
     setIsConnectModalOpen(false)
     showToast(`Successfully connected ${activeProvider === "github" ? "GitHub" : "GitLab"} integration!`)
+    fetchProducts()
   }
 
   // Disconnect provider (allows user to easily re-test onboarding flow)
