@@ -23,11 +23,6 @@ services:
       args:
         BASE_IMAGE: ${BASE_IMAGE}
         BASE_TAG: ${VERSION}
-    depends_on:
-      coordinator:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
