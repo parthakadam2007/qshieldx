@@ -16,6 +16,9 @@ from tqdm import tqdm
 from .config import AVAILABLE_WORKERS
 from .models import RepoInfo
 
+import re
+import requests
+
 logger = logging.getLogger(__name__)
 
 
@@ -563,3 +566,80 @@ def repo_html_url(repo: dict) -> str:
         return f"https://github.com/{full}" if full else ""
     except Exception:
         return ""
+
+GITHUB_REPO_REGEX = re.compile(
+    r"^(?:https?://)?(?:www\.)?github\.com/"
+    r"([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)"
+    r"(?:\.git)?/?$"
+)
+
+
+def parse_github_url(
+    github_url: str,
+    branch: str = "main"
+) -> tuple[str, str, str]:
+    """
+    Validate GitHub URL and get latest commit hash.
+
+    Returns:
+        repo_identifier: github/owner/repo@commit
+        git_url:         https://github.com/owner/repo.git
+        commit_hash:     latest commit SHA
+    """
+
+    if not github_url or not isinstance(github_url, str):
+        raise ValueError("GitHub URL is required")
+
+    github_url = github_url.strip()
+
+    match = GITHUB_REPO_REGEX.fullmatch(github_url)
+
+    if not match:
+        raise ValueError(
+            "Invalid GitHub repository URL. "
+            "Expected https://github.com/<owner>/<repository>"
+        )
+
+    owner = match.group(1)
+    repo = match.group(2).removesuffix(".git")
+
+    # Get latest commit from GitHub
+    api_url = (
+        f"https://api.github.com/repos/"
+        f"{owner}/{repo}/commits/{branch}"
+    )
+
+    response = requests.get(
+        api_url,
+        timeout=10,
+        headers={
+            "Accept": "application/vnd.github+json"
+        }
+    )
+
+    if response.status_code == 404:
+        raise ValueError(
+            f"Repository or branch not found: {owner}/{repo}@{branch}"
+        )
+
+    if response.status_code != 200:
+        raise ValueError(
+            f"GitHub API error: {response.status_code}"
+        )
+
+    data = response.json()
+
+    commit_hash = data["sha"]
+
+    # Short hash for your CBOM identifier
+    short_hash = commit_hash[:7]
+
+    repo_identifier = (
+        f"github/{owner}/{repo}@{short_hash}"
+    )
+
+    git_url = (
+        f"https://github.com/{owner}/{repo}.git"
+    )
+
+    return repo_identifier, git_url, commit_hash
