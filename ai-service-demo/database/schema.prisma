@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = postgresql://postgres.niezckmypzqzqmdwpqxo:parthakadam12412326@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true
+  directUrl = postgresql://postgres.niezckmypzqzqmdwpqxo:parthakadam12412326@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres
+}
+
+model cbom {
+  cbom_id       BigInt     @id @default(autoincrement())
+  repository_id BigInt
+  tool          String     @db.VarChar(50)
+  data          Json
+  commit_hash   String?    @db.VarChar(100)
+  branch        String?    @db.VarChar(255)
+  created_at    DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime   @default(now()) @db.Timestamptz(6)
+  repository    repository @relation(fields: [repository_id], references: [repository_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cbom_repository")
+
+  @@index([commit_hash], map: "idx_cbom_commit_hash")
+  @@index([repository_id], map: "idx_cbom_repository_id")
+  @@index([tool], map: "idx_cbom_tool")
+}
+
+model project {
+  project_id    BigInt        @id @default(autoincrement())
+  project_name  String        @db.VarChar(255)
+  user_id       BigInt
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime      @default(now()) @db.Timestamptz(6)
+  qshieldx_user qshieldx_user @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_user")
+  repository    repository[]
+
+  @@index([user_id], map: "idx_project_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model qshieldx_user {
+  user_id       BigInt    @id @default(autoincrement())
+  user_name     String    @db.VarChar(100)
+  email         String    @unique @db.VarChar(255)
+  password_hash String
+  role          String    @default("visitor") @db.VarChar(20)
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  project       project[]
+
+  @@index([email], map: "idx_qshieldx_user_email")
+}
+
+model repository {
+  repository_id BigInt   @id @default(autoincrement())
+  project_id    BigInt
+  repo_uri      String
+  repo_name     String?  @db.VarChar(255)
+  repo_branch   String?  @default("main") @db.VarChar(255)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+  cbom          cbom[]
+  project       project  @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_repository_project")
+
+  @@unique([project_id, repo_uri], map: "unique_project_repository")
+  @@index([project_id], map: "idx_repository_project_id")
+}
