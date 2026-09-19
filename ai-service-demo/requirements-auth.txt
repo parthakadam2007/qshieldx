@@ -1,0 +1,2 @@
+PyJWT>=2.14,<3
+pwdlib[argon2]>=0.3,<1

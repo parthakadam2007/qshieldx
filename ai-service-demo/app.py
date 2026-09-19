@@ -1,18 +1,40 @@
-from fastapi import FastAPI ,HTTPException
+from contextlib import asynccontextmanager
+
+from fastapi import Depends, FastAPI, HTTPException
 from urllib.parse import unquote
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 import json
+load_dotenv()
+
 from .issue import create_github_issue
 from pydantic import BaseModel
 from common.utils import parse_github_url
 from workers.cbomkit import  CbomKitClient
-load_dotenv()
+from .auth import (
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+    db,
+    get_current_user,
+    login_user,
+    register_user,
+)
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    await db.connect()
+    try:
+        yield
+    finally:
+        await db.disconnect()
+
 
 app = FastAPI(
     title="My API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -31,8 +53,29 @@ app.add_middleware(
 async def root():
     return {"message": "Hello World"}
 
+
+@app.post("/auth/register", response_model=TokenResponse, status_code=201)
+async def register(request: RegisterRequest):
+    return await register_user(request)
+
+
+@app.post("/auth/login", response_model=TokenResponse)
+async def login(request: LoginRequest):
+    return await login_user(request)
+
+
+@app.get("/auth/me")
+async def current_user(user=Depends(get_current_user)):
+    return {
+        "user_id": int(user.user_id),
+        "user_name": user.user_name,
+        "email": user.email,
+        "role": user.role,
+        "created_at": user.created_at,
+    }
+
 @app.get("/make_isse")
-async def root():
+async def root(_user=Depends(get_current_user)):
         # Load your CBOM
     with open(
         "D://qshieldx//cbom.json",
@@ -120,7 +163,7 @@ COMPLIANCE_URL = (
 
 
 @app.post("/cbom")
-def generate_cbom(request: CBOMRequest):
+def generate_cbom(request: CBOMRequest, _user=Depends(get_current_user)):
 
     # 1. Validate + parse GitHub URL
     try:
