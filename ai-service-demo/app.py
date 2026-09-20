@@ -40,7 +40,7 @@ app.add_middleware(
 
 @app.get("/", tags=["health"])
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "looks all good :)"}
 
 
 app.include_router(auth.router)
