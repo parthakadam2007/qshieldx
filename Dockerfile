@@ -5,6 +5,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
+ENV UV_LINK_MODE=copy
+
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends libatomic1 \
 	&& rm -rf /var/lib/apt/lists/*

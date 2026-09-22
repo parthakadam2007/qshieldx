@@ -13,14 +13,18 @@ services:
       - ./ai_service_demo/.env
 
     volumes:
-      # Mount source code
+      # Mount backend source code for live reload
       - ./app:/app/app
+      - ./ai_service_demo:/app/ai_service_demo
+      - ./common:/app/common
+      - ./workers:/app/workers
 
       # Keep container's virtual environment
       - /app/.venv
 
     environment:
       PYTHONUNBUFFERED: "1"
+      WATCHFILES_FORCE_POLLING: "true"
 
     command:
       - uv
@@ -34,3 +38,9 @@ services:
       - --reload
       - --reload-dir
       - /app/app
+      - --reload-dir
+      - /app/ai_service_demo
+      - --reload-dir
+      - /app/common
+      - --reload-dir
+      - /app/workers
