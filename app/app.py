@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .database.client import db
-from .routes import auth, cbom, issue, projects
+from ai_service_demo.database.client import db
+from ai_service_demo.routes import auth, cbom, issue, projects
 
 
 load_dotenv()

@@ -56,3 +56,4 @@ def generate_cbom(request: CBOMRequest) -> dict:
         "cbom": cbom,
         "quantum_compliance": quantum_check,
     }
+

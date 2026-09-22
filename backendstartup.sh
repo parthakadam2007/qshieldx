@@ -10,7 +10,7 @@ echo "======================================"
 # Load environment variables
 # --------------------------------------
 
-ENV_FILE="ai-service-demo/.env"
+ENV_FILE="ai_service_demo/.env"
 
 if [ ! -f "$ENV_FILE" ]; then
     echo "ERROR: $ENV_FILE not found."
@@ -20,9 +20,10 @@ fi
 set -a
 source "$ENV_FILE"
 set +a
+export DATABASE_URL="postgresql://postgres.niezckmypzqzqmdwpqxo:parthakadam12412326@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true"
+export DIRECT_URL="postgresql://postgres.niezckmypzqzqmdwpqxo:parthakadam12412326@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres"
 
 echo "Environment variables loaded."
-
 
 # --------------------------------------
 # CBOMKit environment
@@ -69,6 +70,4 @@ echo "CBOMKit started."
 
 echo "[3/3] Starting AI service..."
 
-uv run uvicorn "ai-service-demo.app:app" \
-    --reload \
-    --env-file "$ENV_FILE"
+docker compose -f 'docker-compose.yml' up -d

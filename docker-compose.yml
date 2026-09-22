@@ -1,37 +1,36 @@
-name: qshieldx
 services:
-
-  redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    restart: on-failure:3
-    healthcheck:
-        test: ["CMD", "redis-cli", "ping"]
-        interval: 2s
-        timeout: 2s
-        retries: 5
-        start_period: 1s
-
-  worker-cbomkit:
-    image: bf-cbom/worker-cbomkit:${VERSION:-latest}
+  api:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.worker-cbomkit
-      args:
-        BASE_IMAGE: ${BASE_IMAGE}
-        BASE_TAG: ${VERSION}
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - WORKER_TIMEOUT_SEC=600
-      - CBOMKIT_HEALTH_WAIT_SEC=20
-      - JAVA_OPTS=-Xms1g -Xmx6g -XX:+ExitOnOutOfMemoryError
-    env_file: docker/env/worker-cbomkit.env
-    restart: on-failure:3
-    profiles: [prod, all]
+      dockerfile: Dockerfile
 
-volumes:
-  redis-data:
+    container_name: python-api
+
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - ./ai_service_demo/.env
+
+    volumes:
+      # Mount source code
+      - ./app:/app/app
+
+      # Keep container's virtual environment
+      - /app/.venv
+
+    environment:
+      PYTHONUNBUFFERED: "1"
+
+    command:
+      - uv
+      - run
+      - uvicorn
+      - app.app:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /app/app
