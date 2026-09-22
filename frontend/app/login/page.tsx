@@ -1,5 +1,5 @@
-// OOP: Encapsulation — This component encapsulates login state and credential submission.
-// OOP: Abstraction — Exposes a simple authentication form interface while hiding NextAuth details.
+ // OOP: Encapsulation — This component encapsulates login state and credential submission.
+ // OOP: Abstraction — Exposes a simple authentication form interface while hiding NextAuth details.
 
 "use client";
 

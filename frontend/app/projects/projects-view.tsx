@@ -1,3 +1,4 @@
+// OOP: Encapsulation — This component encapsulates project management state and UI interactions.
 "use client"
 
 import * as React from "react"
