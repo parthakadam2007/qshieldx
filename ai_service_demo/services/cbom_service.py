@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from common.utils import parse_github_url
 from workers.cbomkit import CbomKitClient
 from ..schemas.cbom import CBOMRequest
-
+from ..database.client import db
 
 COMPLIANCE_URL = "http://localhost:8081/api/v1/compliance/check"
 
@@ -57,3 +57,9 @@ def generate_cbom(request: CBOMRequest) -> dict:
         "quantum_compliance": quantum_check,
     }
 
+async def save_cbom(CBOM:dict)->str:
+    cbom = await db.cbom(
+        data ={
+            ""
+        }
+    )

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ai_service_demo.database.client import db
-from ai_service_demo.routes import auth, cbom, issue, projects
+from ai_service_demo.routes import auth, cbom, issue, projects, repository
 
 
 load_dotenv()
@@ -21,7 +21,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="My API",
+    title="ai_service_demo",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -40,10 +40,11 @@ app.add_middleware(
 
 @app.get("/", tags=["health"])
 async def root():
-    return {"message": "looks all good :)"}
+    return {"message": "looks all good here :)"}
 
 
 app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(cbom.router)
 app.include_router(issue.router)
+app.include_router(repository.router)
