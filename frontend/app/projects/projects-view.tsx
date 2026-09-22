@@ -59,8 +59,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { useUser } from "@/hooks/useUser"
-import { createClient } from "@/lib/supabase"
+// import { useUser } from "@/hooks/useUser"
+// import { createClient } from "@/lib/supabase"
 
 interface ProjectItem {
   id: string
@@ -110,8 +110,19 @@ const initialProjects: ProjectItem[] = [
 
 export default function ProjectsView() {
   const router = useRouter()
-  const { user } = useUser()
-  const supabase = createClient()
+  const [user, setUser] = React.useState<any>(null)
+
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem("user")
+
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch {
+        localStorage.removeItem("user")
+      }
+    }
+  }, [])
 
   const [projects, setProjects] = React.useState<ProjectItem[]>(initialProjects)
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -242,14 +253,15 @@ export default function ProjectsView() {
 
   // Sign out
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    localStorage.removeItem("access_token")
+    localStorage.removeItem("user")
     router.push("/login")
   }
 
   const userDisplayName =
-    user?.user_metadata?.full_name ||
+    user?.user_name ||
     user?.email?.split("@")[0] ||
-    "parthakadam2007"
+    "User"
   const orgName = `${userDisplayName}'s Workspace`
 
   return (

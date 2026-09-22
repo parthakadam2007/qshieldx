@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import api from "@/lib/axios";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -30,29 +31,33 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  e.preventDefault();
 
-    try {
-      const resp = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name, role }),
-      });
+  setLoading(true);
+  setError("");
 
-      if (resp.ok) {
-        router.push("/login");
-      } else {
-        const data = await resp.json();
-        setError(data.error || "Registration initialization failed.");
-      }
-    } catch (err) {
-      setError("An unexpected network error occurred.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const response = await api.post("/auth/register", {
+      user_name: name.trim(),
+      email: email.trim(),
+      password,
+    });
+
+    console.log("Registration successful:", response.data);
+
+    router.push("/login");
+  } catch (err: any) {
+    console.error("Registration failed:", err);
+    console.error("Backend response:", err.response?.data);
+
+    setError(
+      err.response?.data?.detail ||
+      "Registration failed."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4 relative overflow-hidden">
