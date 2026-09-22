@@ -1,4 +1,5 @@
 // import { createServerClient, type CookieOptions } from '@supabase/ssr'
+
 import { NextResponse, type NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   return NextResponse.next();
