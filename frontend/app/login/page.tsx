@@ -4,7 +4,8 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase";
+// import { createClient } from "@/lib/supabase";
+import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import { Bot, Lock, Mail, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,20 +28,27 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const response = await api.post("/auth/login", {
+      email: email.trim(),
+      password,
+    });
+     
+     console.log("LOGIN RESPONSE:", response.data);
+     const { access_token, user } = response.data;
+     console.log("TOKEN:", access_token);
+     console.log("USER:", user);
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("user", JSON.stringify(user));
+      console.log("TOKEN SAVED:", localStorage.getItem("access_token"));
+      console.log("REDIRECTING TO PROJECTS");
 
-      if (error) {
-        setError(error.message);
-      } else {
-        router.push("/projects");
-        router.refresh();
-      }
-    } catch (err) {
-      setError("A critical system error occurred during authentication.");
+      router.push("/projects");
+      router.refresh();
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail ||
+        "Invalid email or password."
+      );
     } finally {
       setLoading(false);
     }
