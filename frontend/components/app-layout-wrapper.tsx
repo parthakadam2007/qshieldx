@@ -16,6 +16,7 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
 
   // Check if current page is a standalone page (auth or projects page)
   const isStandalonePage =
+    pathname === "/" ||
     pathname === "/login" ||
     pathname === "/register" ||
     pathname === "/projects" ||
@@ -26,6 +27,8 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
     if (isStandalonePage) {
       return <>{children}</>
     }
+    
+    return null
   }
 
   if (isStandalonePage) {
