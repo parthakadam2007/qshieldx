@@ -1,1322 +1,1417 @@
 "use client"
-
-import React, { useMemo } from "react"
+import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-
+import { motion, useScroll, useTransform } from "framer-motion"
 import {
-  Activity,
-  AlertTriangle,
   ArrowRight,
-  Binary,
-  CalendarClock,
-  CheckCircle2,
+  ArrowUpRight,
+  Check,
   ChevronRight,
-  Clock3,
+  CircleCheck,
+  Cpu,
   Database,
-  FileJson,
-  GitBranch,
+  Eye,
+  Fingerprint,
+  Globe2,
   KeyRound,
-  Layers3,
   LockKeyhole,
+  Menu,
+  Network,
   Radar,
-  Rocket,
-  ScanLine,
-  Server,
+  ScanSearch,
   Shield,
-  ShieldAlert,
   ShieldCheck,
   Sparkles,
-  Target,
-  TriangleAlert,
-  Zap,
+  Terminal,
+  X,
 } from "lucide-react"
-
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts"
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-
-import { useGlobalData } from "@/app/context/GlobalDataContext"
-
-/* =========================================================
-   CBOM-DERIVED DATA
-========================================================= */
-
-const CBOM_STATUS_DATA = [
+import * as THREE from "three"
+import { ThemeToggle } from "@/components/theme-toggle"
+const ease = [0.16, 1, 0.3, 1] as const
+const reveal = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease },
+  },
+}
+const stagger = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.07,
+    },
+  },
+}
+const features = [
   {
-    name: "Quantum Vulnerable",
-    value: 8,
-    color: "#ef4444",
+    icon: ScanSearch,
+    title: "Cryptographic Discovery",
+    description:
+      "Discover cryptographic assets, certificates, algorithms, libraries, endpoints, and crypto dependencies across enterprise environments.",
   },
   {
-    name: "Quantum Resistant",
-    value: 6,
-    color: "#22c55e",
+    icon: Database,
+    title: "CBOM Generation",
+    description:
+      "Build a structured Cryptography Bill of Materials that maps cryptographic usage to applications, services, and infrastructure.",
   },
   {
-    name: "Legacy",
-    value: 4,
-    color: "#f59e0b",
-  },
-  {
-    name: "Other / Transitional",
-    value: 4,
-    color: "#8b5cf6",
-  },
-]
-
-const ALGORITHM_DATA = [
-  {
-    name: "RSA",
-    count: 2,
-    risk: 100,
-  },
-  {
-    name: "ECC",
-    count: 2,
-    risk: 95,
-  },
-  {
-    name: "AES",
-    count: 2,
-    risk: 25,
-  },
-  {
-    name: "SHA",
-    count: 2,
-    risk: 20,
-  },
-  {
-    name: "PQC",
-    count: 3,
-    risk: 5,
-  },
-  {
-    name: "DH",
-    count: 1,
-    risk: 90,
-  },
-  {
-    name: "X25519",
-    count: 1,
-    risk: 90,
-  },
-  {
-    name: "TLS",
-    count: 2,
-    risk: 55,
-  },
-  {
-    name: "JWT",
-    count: 1,
-    risk: 85,
-  },
-  {
-    name: "Other",
-    count: 3,
-    risk: 30,
-  },
-]
-
-const SECURITY_POSTURE = [
-  {
-    name: "Quantum Readiness",
-    value: 42,
     icon: Radar,
-    color: "bg-purple-500",
-    text: "text-purple-500",
+    title: "Quantum Risk Analysis",
+    description:
+      "Analyze cryptographic exposure and identify assets that require migration planning for the post-quantum era.",
   },
   {
-    name: "PQC Adoption",
-    value: 27,
+    icon: Network,
+    title: "Dependency Mapping",
+    description:
+      "Visualize relationships between applications, services, certificates, keys, algorithms, and cryptographic libraries.",
+  },
+  {
     icon: ShieldCheck,
-    color: "bg-emerald-500",
-    text: "text-emerald-500",
+    title: "PQC Readiness",
+    description:
+      "Track migration readiness and organize remediation work around vulnerable or long-lived cryptographic assets.",
   },
   {
-    name: "Crypto Agility",
-    value: 64,
-    icon: GitBranch,
-    color: "bg-blue-500",
-    text: "text-blue-500",
+    icon: Terminal,
+    title: "Security Automation",
+    description:
+      "Connect discovery, analysis, reporting, and remediation workflows through an automation-first security platform.",
   },
 ]
-
-const VULNERABILITIES = [
+const workflow = [
   {
-    id: "QX-CRYPTO-001",
-    title: "Weak RSA",
-    algorithm: "RSA-2048",
-    severity: "critical",
-    score: 9.5,
-    description:
-      "RSA-2048 is vulnerable to future cryptographically relevant quantum computers using Shor's algorithm.",
-    recommendation:
-      "Migrate to a post-quantum or hybrid cryptographic mechanism.",
+    number: "01",
+    icon: ScanSearch,
+    title: "Discover",
+    text: "Scan enterprise infrastructure and identify cryptographic artifacts.",
   },
   {
-    id: "QX-CRYPTO-002",
-    title: "ECDSA P-256",
-    algorithm: "ECDSA",
-    severity: "high",
-    score: 8.5,
-    description:
-      "ECDSA relies on elliptic-curve discrete logarithms and is vulnerable to Shor's algorithm.",
-    recommendation:
-      "Adopt ML-DSA or another approved post-quantum signature scheme.",
+    number: "02",
+    icon: Fingerprint,
+    title: "Inventory",
+    text: "Normalize assets into a centralized cryptographic inventory.",
   },
   {
-    id: "QX-CRYPTO-003",
-    title: "Legacy TLS",
-    algorithm: "TLS 1.2",
-    severity: "medium",
-    score: 6.5,
-    description:
-      "Legacy TLS configuration detected in the cryptographic inventory.",
-    recommendation:
-      "Upgrade to TLS 1.3 and evaluate hybrid PQC key exchange.",
+    number: "03",
+    icon: Radar,
+    title: "Assess",
+    text: "Evaluate algorithms, dependencies, exposure, and quantum risk.",
+  },
+  {
+    number: "04",
+    icon: ShieldCheck,
+    title: "Prepare",
+    text: "Prioritize migration work and build a path toward PQC readiness.",
   },
 ]
-
-const MIGRATION_ITEMS = [
+const capabilities = [
+  "TLS endpoint discovery",
+  "Certificate inventory",
+  "Algorithm identification",
+  "Key and certificate mapping",
+  "Cryptographic dependency analysis",
+  "CBOM generation",
+  "Quantum risk classification",
+  "PQC migration tracking",
+]
+const securityItems = [
   {
-    title: "RSA-2048",
-    location: "API Gateway certificate",
-    priority: "Critical",
-    icon: KeyRound,
-  },
-  {
-    title: "JWT RS256",
-    location: "Authentication Service",
-    priority: "High",
     icon: LockKeyhole,
+    title: "Security-first architecture",
+    text: "Designed around visibility, controlled access, auditable discovery, and structured cryptographic intelligence.",
   },
   {
-    title: "ECDSA P-256",
-    location: "Digital signatures",
-    priority: "High",
-    icon: ShieldAlert,
+    icon: KeyRound,
+    title: "Cryptographic visibility",
+    text: "Move from unknown cryptographic dependencies to an inventory you can understand and manage.",
   },
   {
-    title: "DH-2048",
-    location: "Key agreement",
-    priority: "High",
-    icon: Binary,
-  },
-  {
-    title: "TLS 1.2",
-    location: "Legacy transport",
-    priority: "Medium",
-    icon: Server,
+    icon: Eye,
+    title: "Actionable intelligence",
+    text: "Turn raw discovery results into prioritized information for engineering and security teams.",
   },
 ]
-
-/* =========================================================
-   HELPERS
-========================================================= */
-
-function MetricCard({
+function SectionHeading({
+  eyebrow,
   title,
-  value,
   description,
-  icon: Icon,
-  className = "",
-  valueClassName = "",
-  iconClassName = "",
 }: {
+  eyebrow: string
   title: string
-  value: string | number
   description: string
-  icon: React.ElementType
-  className?: string
-  valueClassName?: string
-  iconClassName?: string
 }) {
   return (
-    <Card
-      className={`
-        group relative overflow-hidden
-        border-border/50
-        bg-background/60
-        backdrop-blur-xl
-        transition-all duration-300
-        hover:-translate-y-1
-        hover:border-primary/30
-        hover:shadow-xl
-        ${className}
-      `}
+    <motion.div
+      variants={reveal}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.25 }}
+      className="mx-auto max-w-3xl text-center"
     >
-      <div className="absolute -right-10 -top-10 size-24 rounded-full bg-primary/10 blur-3xl transition-all duration-500 group-hover:bg-primary/20" />
-
-      <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-
-        <div
-          className={`flex size-9 items-center justify-center rounded-xl bg-muted/70 ${iconClassName}`}
-        >
-          <Icon className="size-4" />
-        </div>
-      </CardHeader>
-
-      <CardContent className="relative">
-        <div className={`text-3xl font-bold tracking-tight ${valueClassName}`}>
-          {value}
-        </div>
-
-        <p className="mt-1 text-[10px] text-muted-foreground">
-          {description}
-        </p>
-      </CardContent>
-    </Card>
+      <div className="mb-4 inline-flex items-center gap-2 border border-white/10 bg-white/[0.025] px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
+        <Sparkles className="h-3 w-3" />
+        {eyebrow}
+      </div>
+      <h2 className="text-3xl font-semibold tracking-[-0.035em] text-white sm:text-4xl lg:text-5xl">
+        {title}
+      </h2>
+      <p className="mt-5 text-base leading-7 text-slate-500 sm:text-lg">
+        {description}
+      </p>
+    </motion.div>
   )
 }
-
-function SeverityBadge({
-  severity,
-}: {
-  severity: string
-}) {
-  if (severity === "critical") {
-    return (
-      <Badge
-        variant="outline"
-        className="border-red-500/30 bg-red-500/10 text-red-500"
-      >
-        CRITICAL
-      </Badge>
-    )
-  }
-
-  if (severity === "high") {
-    return (
-      <Badge
-        variant="outline"
-        className="border-orange-500/30 bg-orange-500/10 text-orange-500"
-      >
-        HIGH
-      </Badge>
-    )
-  }
-
+function BackgroundGrid() {
   return (
-    <Badge
-      variant="outline"
-      className="border-amber-500/30 bg-amber-500/10 text-amber-500"
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      MEDIUM
-    </Badge>
-  )
-}
-
-/* =========================================================
-   PAGE
-========================================================= */
-
-export default function Page() {
-  const router = useRouter()
-  const { data, isLoading } = useGlobalData()
-
-  const scan = data.scan
-
-  const totalAssets = scan?.assetCount ?? 22
-
-  const quantumReady = 42
-  const riskScore = 78
-  const pqcAdoption = 27
-  const vulnerableAssets = 8
-  const legacyAssets = 4
-  const resistantAssets = 6
-
-  const certificateCount = scan?.certificateCount ?? 36
-  const criticalSecrets = scan?.criticalSecrets ?? 2
-
-  const statusTotal = CBOM_STATUS_DATA.reduce(
-    (sum, item) => sum + item.value,
-    0,
-  )
-
-  const riskLabel = riskScore >= 70 ? "HIGH" : "MODERATE"
-
-  const donutLabel = useMemo(() => {
-    return `${Math.round((vulnerableAssets / totalAssets) * 100)}%`
-  }, [totalAssets])
-
-  return (
-    <div className="relative min-h-full overflow-hidden">
-      {/* =====================================================
-          BACKGROUND
-      ===================================================== */}
-
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-40 top-20 size-[500px] rounded-full bg-purple-500/5 blur-[130px]" />
-        <div className="absolute right-0 top-0 size-[500px] rounded-full bg-blue-500/5 blur-[130px]" />
-        <div className="absolute bottom-0 left-1/3 size-[400px] rounded-full bg-emerald-500/5 blur-[130px]" />
-
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage:
-              "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)",
-            backgroundSize: "42px 42px",
-          }}
-        />
-      </div>
-
-      <div className="relative mx-auto max-w-[1600px] space-y-6 p-4 md:p-8">
-        {/* ===================================================
-            HEADER
-        =================================================== */}
-
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative flex size-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 shadow-lg shadow-primary/10">
-              <Shield className="size-7 text-primary" />
-
-              <span className="absolute -right-1 -top-1 size-3 rounded-full border-2 border-background bg-emerald-500 animate-pulse" />
-            </div>
-
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                  Enterprise Cryptography Overview
-                </h1>
-
-                <Badge
-                  variant="outline"
-                  className="border-red-500/30 bg-red-500/5 text-red-500"
-                >
-                  <ShieldAlert className="mr-1 size-3" />
-                  {riskLabel} RISK
-                </Badge>
-              </div>
-
-              <p className="mt-1 text-sm text-muted-foreground">
-                Post-quantum readiness, cryptographic inventory and migration
-                intelligence.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/cbom">
-                <FileJson className="mr-2 size-4" />
-                CBOM Explorer
-              </Link>
-            </Button>
-
-            <Button asChild>
-              <Link href="/targets/new">
-                <ScanLine className="mr-2 size-4" />
-                Run Discovery
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* ===================================================
-            SCAN STATUS
-        =================================================== */}
-
-        <Card className="overflow-hidden border-primary/15 bg-primary/[0.025] backdrop-blur-xl">
-          <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                <CheckCircle2 className="size-5 text-emerald-500" />
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold">
-                  CBOM analysis completed
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  Scan scan-2026-09-15-001 • CycloneDX 1.7 • QShieldX CBOM
-                  Engine
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Clock3 className="size-3" />
-                {scan?.duration ?? "48.2s"}
-              </span>
-
-              <span className="flex items-center gap-1.5">
-                <Database className="size-3" />
-                {totalAssets} assets
-              </span>
-
-              <span className="flex items-center gap-1.5">
-                <Layers3 className="size-3" />
-                14 recommendations
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ===================================================
-            KPI ROW
-        =================================================== */}
-
-        <div className="grid grid-cols-2 gap-4 xl:grid-cols-6">
-          <MetricCard
-            title="Crypto Assets"
-            value={totalAssets}
-            description="Indexed in CBOM"
-            icon={KeyRound}
-            iconClassName="text-primary"
-          />
-
-          <MetricCard
-            title="Quantum Vulnerable"
-            value={vulnerableAssets}
-            description="Requires migration"
-            icon={ShieldAlert}
-            valueClassName="text-red-500"
-            iconClassName="text-red-500"
-          />
-
-          <MetricCard
-            title="Quantum Resistant"
-            value={resistantAssets}
-            description="Resistant inventory"
-            icon={ShieldCheck}
-            valueClassName="text-emerald-500"
-            iconClassName="text-emerald-500"
-          />
-
-          <MetricCard
-            title="Legacy"
-            value={legacyAssets}
-            description="Legacy cryptography"
-            icon={TriangleAlert}
-            valueClassName="text-amber-500"
-            iconClassName="text-amber-500"
-          />
-
-          <MetricCard
-            title="Risk Score"
-            value={`${riskScore}/100`}
-            description="Overall cryptographic risk"
-            icon={Target}
-            valueClassName="text-red-500"
-            iconClassName="text-red-500"
-          />
-
-          <MetricCard
-            title="PQC Adoption"
-            value={`${pqcAdoption}%`}
-            description="Post-quantum mechanisms"
-            icon={Rocket}
-            valueClassName="text-purple-500"
-            iconClassName="text-purple-500"
-          />
-        </div>
-
-        {/* ===================================================
-            CHART ROW
-        =================================================== */}
-
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          {/* =================================================
-              PIE CHART
-          ================================================= */}
-
-          <Card className="overflow-hidden border-border/50 bg-background/60 backdrop-blur-xl">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Radar className="size-4 text-primary" />
-                    Cryptographic Risk Distribution
-                  </CardTitle>
-
-                  <CardDescription className="text-xs">
-                    CBOM assets by quantum security posture
-                  </CardDescription>
-                </div>
-
-                <Badge variant="outline">
-                  {statusTotal} classified
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              <div className="relative h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={CBOM_STATUS_DATA}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={72}
-                      outerRadius={105}
-                      paddingAngle={4}
-                      strokeWidth={0}
-                      animationDuration={1200}
-                    >
-                      {CBOM_STATUS_DATA.map((entry) => (
-                        <Cell
-                          key={entry.name}
-                          fill={entry.color}
-                        />
-                      ))}
-                    </Pie>
-
-                    <Tooltip
-                      contentStyle={{
-                        background: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "10px",
-                        fontSize: "11px",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-bold">
-                    {donutLabel}
-                  </span>
-
-                  <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                    Vulnerable
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                {CBOM_STATUS_DATA.map((item) => (
-                  <div
-                    key={item.name}
-                    className="flex items-center justify-between rounded-lg border border-border/50 bg-card/50 p-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="size-2 rounded-full"
-                        style={{
-                          backgroundColor: item.color,
-                        }}
-                      />
-
-                      <span className="text-[10px]">
-                        {item.name}
-                      </span>
-                    </div>
-
-                    <span className="font-mono text-xs font-bold">
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* =================================================
-              ALGORITHM BAR CHART
-          ================================================= */}
-
-          <Card className="overflow-hidden border-border/50 bg-background/60 backdrop-blur-xl xl:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Binary className="size-4 text-purple-500" />
-                Algorithm Inventory
-              </CardTitle>
-
-              <CardDescription className="text-xs">
-                Cryptographic primitives discovered in the CBOM
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent>
-              <div className="h-[320px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={ALGORITHM_DATA}
-                    margin={{
-                      top: 10,
-                      right: 10,
-                      left: -20,
-                      bottom: 10,
-                    }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      opacity={0.08}
-                      vertical={false}
-                    />
-
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 10 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-
-                    <YAxis
-                      allowDecimals={false}
-                      tick={{ fontSize: 10 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-
-                    <Tooltip
-                      contentStyle={{
-                        background: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "10px",
-                        fontSize: "11px",
-                      }}
-                    />
-
-                    <Bar
-                      dataKey="count"
-                      radius={[6, 6, 0, 0]}
-                      animationDuration={1300}
-                    >
-                      {ALGORITHM_DATA.map((item) => (
-                        <Cell
-                          key={item.name}
-                          fill={
-                            item.risk >= 80
-                              ? "#ef4444"
-                              : item.risk >= 50
-                                ? "#f59e0b"
-                                : item.risk <= 20
-                                  ? "#22c55e"
-                                  : "#8b5cf6"
-                          }
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-red-500" />
-                  Quantum vulnerable
-                </span>
-
-                <span className="flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-amber-500" />
-                  Transitional
-                </span>
-
-                <span className="flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-emerald-500" />
-                  Resistant / acceptable
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ===================================================
-            POSTURE + OSCA
-        =================================================== */}
-
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
-          {/* POSTURE */}
-
-          <Card className="border-border/50 bg-background/60 backdrop-blur-xl xl:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <GaugeIcon />
-                Security Posture
-              </CardTitle>
-
-              <CardDescription className="text-xs">
-                Current cryptographic modernization state
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-5">
-              {SECURITY_POSTURE.map((item) => {
-                const Icon = item.icon
-
-                return (
-                  <div key={item.name}>
-                    <div className="mb-2 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Icon className={`size-4 ${item.text}`} />
-
-                        <span className="text-xs font-medium">
-                          {item.name}
-                        </span>
-                      </div>
-
-                      <span
-                        className={`font-mono text-xs font-bold ${item.text}`}
-                      >
-                        {item.value}%
-                      </span>
-                    </div>
-
-                    <Progress
-                      value={item.value}
-                      className="h-2"
-                    />
-                  </div>
-                )
-              })}
-
-              <Separator />
-
-              <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10">
-                    <AlertTriangle className="size-4 text-red-500" />
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-red-500">
-                      Harvest-now, decrypt-later
-                    </p>
-
-                    <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
-                      The CBOM classifies HNDL exposure as high-risk and
-                      identifies long-lived data requiring protection.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* OSCA */}
-
-          <Card className="relative overflow-hidden border-purple-500/20 bg-background/60 backdrop-blur-xl xl:col-span-3">
-            <div className="absolute right-0 top-0 size-48 rounded-full bg-purple-500/10 blur-3xl" />
-
-            <CardHeader className="relative">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Sparkles className="size-4 text-purple-500" />
-                    OSCA's Theorem Timeline
-                  </CardTitle>
-
-                  <CardDescription className="text-xs">
-                    Shelf life + migration time versus quantum arrival
-                  </CardDescription>
-                </div>
-
-                <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/20">
-                  x + y &gt; z
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent className="relative">
-              {/* Timeline */}
-
-              <div className="relative mt-3 px-2">
-                <div className="absolute left-8 right-8 top-7 h-1 rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 opacity-30" />
-
-                <div className="relative flex items-start justify-between">
-                  <div className="flex w-28 flex-col items-center text-center">
-                    <div className="relative z-10 flex size-14 items-center justify-center rounded-full border-4 border-background bg-emerald-500/15 text-emerald-500 shadow-lg">
-                      <Rocket className="size-5" />
-                    </div>
-
-                    <p className="mt-3 text-xs font-semibold">
-                      Today
-                    </p>
-
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      Migration begins
-                    </p>
-
-                    <Badge
-                      variant="outline"
-                      className="mt-2 border-emerald-500/20 text-emerald-500"
-                    >
-                      y ≈ 3 yrs
-                    </Badge>
-                  </div>
-
-                  <div className="flex w-32 flex-col items-center text-center">
-                    <div className="relative z-10 flex size-14 items-center justify-center rounded-full border-4 border-background bg-amber-500/15 text-amber-500 shadow-lg">
-                      <Database className="size-5" />
-                    </div>
-
-                    <p className="mt-3 text-xs font-semibold">
-                      Data Value Horizon
-                    </p>
-
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      Data remains valuable
-                    </p>
-
-                    <Badge
-                      variant="outline"
-                      className="mt-2 border-amber-500/20 text-amber-500"
-                    >
-                      x ≈ 15 yrs
-                    </Badge>
-                  </div>
-
-                  <div className="flex w-28 flex-col items-center text-center">
-                    <div className="relative z-10 flex size-14 items-center justify-center rounded-full border-4 border-background bg-red-500/15 text-red-500 shadow-lg shadow-red-500/10">
-                      <Zap className="size-5 animate-pulse" />
-                    </div>
-
-                    <p className="mt-3 text-xs font-semibold">
-                      Q-Day
-                    </p>
-
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      CRQC available
-                    </p>
-
-                    <Badge
-                      variant="outline"
-                      className="mt-2 border-red-500/20 text-red-500"
-                    >
-                      z ≈ 8 yrs
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Calculation */}
-
-              <div className="mt-7 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border bg-card/50 p-3 text-center">
-                  <p className="text-lg font-bold">15 yrs</p>
-                  <p className="text-[9px] text-muted-foreground">
-                    Shelf life
-                  </p>
-                </div>
-
-                <div className="rounded-xl border bg-card/50 p-3 text-center">
-                  <p className="text-lg font-bold">+</p>
-                  <p className="text-[9px] text-muted-foreground">
-                    Migration
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] p-3 text-center">
-                  <p className="text-lg font-bold text-red-500">
-                    18 yrs
-                  </p>
-                  <p className="text-[9px] text-muted-foreground">
-                    Combined horizon
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-xl border border-red-500/20 bg-gradient-to-r from-red-500/[0.04] to-purple-500/[0.04] p-4">
-                <div className="flex gap-3">
-                  <TriangleAlert className="mt-0.5 size-4 shrink-0 text-red-500" />
-
-                  <div>
-                    <p className="text-xs font-semibold">
-                      OSCA timing exposure
-                    </p>
-
-                    <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
-                      The combined migration and data-value horizon is
-                      approximately 18 years versus the illustrative
-                      projected CRQC arrival window of approximately 8
-                      years. This creates a substantial timing gap that
-                      should inform migration prioritization.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ===================================================
-            MIGRATION + VULNERABILITIES
-        =================================================== */}
-
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          {/* MIGRATION */}
-
-          <Card className="border-border/50 bg-background/60 backdrop-blur-xl">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <GitBranch className="size-4 text-primary" />
-                    Migration Priority
-                  </CardTitle>
-
-                  <CardDescription className="text-xs">
-                    Cryptographic assets to evaluate first
-                  </CardDescription>
-                </div>
-
-                <Badge variant="outline">
-                  {vulnerableAssets} vulnerable
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-2">
-              {MIGRATION_ITEMS.map((item, index) => {
-                const Icon = item.icon
-
-                return (
-                  <div
-                    key={item.title}
-                    className="group flex items-center justify-between rounded-xl border border-border/50 bg-card/40 p-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-card"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-red-500/10 text-red-500">
-                        <Icon className="size-4" />
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-semibold">
-                          {item.title}
-                        </p>
-
-                        <p className="text-[10px] text-muted-foreground">
-                          {item.location}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={
-                          item.priority === "Critical"
-                            ? "border-red-500/30 text-red-500"
-                            : item.priority === "High"
-                              ? "border-orange-500/30 text-orange-500"
-                              : "border-amber-500/30 text-amber-500"
-                        }
-                      >
-                        {item.priority}
-                      </Badge>
-
-                      <ChevronRight className="size-3 text-muted-foreground transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                )
-              })}
-
-              <Button
-                variant="ghost"
-                className="mt-2 w-full text-xs"
-                onClick={() => router.push("/intelligence")}
-              >
-                Open Intelligence Command Center
-                <ArrowRight className="ml-2 size-3" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* VULNERABILITIES */}
-
-          <Card className="border-border/50 bg-background/60 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <ShieldAlert className="size-4 text-red-500" />
-                CBOM Vulnerabilities
-              </CardTitle>
-
-              <CardDescription className="text-xs">
-                Findings generated from the cryptographic inventory
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-3">
-              {VULNERABILITIES.map((vulnerability) => (
-                <div
-                  key={vulnerability.id}
-                  className="rounded-xl border border-border/50 bg-card/40 p-4 transition-all hover:border-red-500/20"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-xs font-semibold">
-                          {vulnerability.title}
-                        </p>
-
-                        <SeverityBadge
-                          severity={vulnerability.severity}
-                        />
-                      </div>
-
-                      <p className="mt-1 font-mono text-[9px] text-muted-foreground">
-                        {vulnerability.id} • {vulnerability.algorithm}
-                      </p>
-                    </div>
-
-                    <div className="rounded-lg bg-red-500/10 px-2 py-1 text-xs font-bold text-red-500">
-                      {vulnerability.score}
-                    </div>
-                  </div>
-
-                  <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-                    {vulnerability.description}
-                  </p>
-
-                  <div className="mt-3 rounded-lg border-l-2 border-primary bg-primary/[0.03] p-2.5 text-[10px]">
-                    <span className="font-semibold">
-                      Recommendation:
-                    </span>{" "}
-                    {vulnerability.recommendation}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ===================================================
-            INFRASTRUCTURE
-        =================================================== */}
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* SERVICES */}
-
-          <Card className="border-border/50 bg-background/60 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="text-sm">
-                Protected Services
-              </CardTitle>
-
-              <CardDescription className="text-xs">
-                Services identified in the CBOM
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-2">
-              {[
-                {
-                  name: "API Gateway",
-                  crypto: "TLS 1.3 + RSA-2048",
-                  status: "At Risk",
-                },
-                {
-                  name: "Authentication Service",
-                  crypto: "JWT RS256 + bcrypt",
-                  status: "At Risk",
-                },
-                {
-                  name: "PostgreSQL Database",
-                  crypto: "TLS + AES-256",
-                  status: "Protected",
-                },
-              ].map((service) => (
-                <div
-                  key={service.name}
-                  className="flex items-center justify-between rounded-xl border border-border/50 p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-                      <Server className="size-4 text-primary" />
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-semibold">
-                        {service.name}
-                      </p>
-
-                      <p className="text-[9px] text-muted-foreground">
-                        {service.crypto}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Badge
-                    variant="outline"
-                    className={
-                      service.status === "Protected"
-                        ? "border-emerald-500/20 text-emerald-500"
-                        : "border-amber-500/20 text-amber-500"
-                    }
-                  >
-                    {service.status}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* CERTIFICATES */}
-
-          <Card className="border-border/50 bg-background/60 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <CalendarClock className="size-4 text-amber-500" />
-                Certificate Intelligence
-              </CardTitle>
-
-              <CardDescription className="text-xs">
-                Certificate inventory and lifecycle
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent>
-              <div className="flex items-end gap-2">
-                <span className="text-4xl font-bold">
-                  {certificateCount}
-                </span>
-
-                <span className="mb-1 text-xs text-muted-foreground">
-                  certificates
-                </span>
-              </div>
-
-              <Separator className="my-4" />
-
-              <div className="space-y-3">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    Expiring soon
-                  </span>
-
-                  <span className="font-semibold text-amber-500">
-                    11
-                  </span>
-                </div>
-
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    RSA based
-                  </span>
-
-                  <span className="font-semibold text-red-500">
-                    22
-                  </span>
-                </div>
-
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    Hybrid migration
-                  </span>
-
-                  <span className="font-semibold text-purple-500">
-                    Required
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* CBOM */}
-
-          <Card
-            className="cursor-pointer border-primary/15 bg-background/60 backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl"
-            onClick={() => router.push("/cbom")}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <FileJson className="size-4 text-primary" />
-                CBOM Intelligence
-              </CardTitle>
-
-              <CardDescription className="text-xs">
-                CycloneDX cryptographic bill of materials
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10">
-                  <FileJson className="size-8 text-primary" />
-                </div>
-
-                <div>
-                  <p className="text-2xl font-bold">
-                    1.7
-                  </p>
-
-                  <p className="text-[10px] text-muted-foreground">
-                    CycloneDX specification
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 flex items-center justify-between">
-                <span className="text-[10px] text-muted-foreground">
-                  Scan completed
-                </span>
-
-                <span className="flex items-center text-xs font-medium text-primary">
-                  Explore CBOM
-                  <ArrowRight className="ml-1 size-3" />
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ===================================================
-            FOOTER
-        =================================================== */}
-
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/40 pt-4 text-[10px] text-muted-foreground">
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              CBOM Engine Operational
-            </span>
-
-            <span className="flex items-center gap-1.5">
-              <Activity className="size-3" />
-              Last scan: 48.2s
-            </span>
-
-            <span className="flex items-center gap-1.5">
-              <Database className="size-3" />
-              {totalAssets} assets
-            </span>
-          </div>
-
-          <span className="font-mono">
-            QShieldX • Cryptographic Intelligence
-          </span>
-        </div>
-      </div>
+      <div
+        className="absolute inset-0 opacity-[0.08]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px)",
+          backgroundSize: "64px 64px",
+          maskImage:
+            "radial-gradient(ellipse at center, black 10%, transparent 72%)",
+        }}
+      />
+      <div className="absolute left-1/2 top-[-360px] h-[720px] w-[720px] -translate-x-1/2 rounded-full bg-white/[0.025] blur-[120px]" />
     </div>
   )
 }
-
-/* =========================================================
-   ICON HELPER
-========================================================= */
-
-function GaugeIcon() {
-  return <Target className="size-4 text-blue-500" />
+function FloatingParticles() {
+  const particles = React.useMemo(
+    () =>
+      Array.from({ length: 28 }, (_, index) => ({
+        id: index,
+        left: `${(index * 37) % 100}%`,
+        top: `${(index * 61) % 100}%`,
+        delay: (index % 8) * 0.28,
+        duration: 4 + (index % 5),
+        size: index % 4 === 0 ? 2 : 1,
+      })),
+    []
+  )
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+    >
+      {particles.map((particle) => (
+        <motion.span
+          key={particle.id}
+          className="absolute rounded-full bg-white/50"
+          style={{
+            left: particle.left,
+            top: particle.top,
+            width: particle.size,
+            height: particle.size,
+          }}
+          animate={{
+            opacity: [0.08, 0.5, 0.08],
+            y: [0, -16, 0],
+          }}
+          transition={{
+            duration: particle.duration,
+            delay: particle.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+function CryptoSphere3D() {
+  const mountRef = React.useRef<HTMLDivElement | null>(null)
+  React.useEffect(() => {
+    const mount = mountRef.current
+    if (!mount) {
+      return
+    }
+    let renderer: THREE.WebGLRenderer | null = null
+    let animationFrame = 0
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(
+      36,
+      Math.max(mount.clientWidth, 1) / Math.max(mount.clientHeight, 1),
+      0.1,
+      100
+    )
+    camera.position.set(0, 0.7, 8.6)
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+      })
+    } catch {
+      return
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setSize(mount.clientWidth, mount.clientHeight)
+    renderer.setClearColor(0x000000, 0)
+    renderer.outputColorSpace = THREE.SRGBColorSpace
+    mount.appendChild(renderer.domElement)
+    const root = new THREE.Group()
+    scene.add(root)
+    const sphereGroup = new THREE.Group()
+    sphereGroup.rotation.x = -0.12
+    root.add(sphereGroup)
+    const sphereGeometry = new THREE.SphereGeometry(2.35, 48, 32)
+    const sphereMaterial = new THREE.MeshBasicMaterial({
+      color: 0x111111,
+      transparent: true,
+      opacity: 0.18,
+      wireframe: true,
+    })
+    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+    sphereGroup.add(sphere)
+    const ribbonMaterials = [
+      new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.28,
+      }),
+      new THREE.LineBasicMaterial({
+        color: 0xbdbdbd,
+        transparent: true,
+        opacity: 0.22,
+      }),
+      new THREE.LineBasicMaterial({
+        color: 0x8f8f8f,
+        transparent: true,
+        opacity: 0.18,
+      }),
+    ]
+    const ribbonCount = 34
+    for (let band = 0; band < ribbonCount; band += 1) {
+      const points: THREE.Vector3[] = []
+      const phase = (band / ribbonCount) * Math.PI * 2
+      const tilt = ((band % 5) - 2) * 0.035
+      for (let i = 0; i <= 220; i += 1) {
+        const t = (i / 220) * Math.PI * 2
+        const latitude =
+          Math.sin(t * 2 + phase) * 0.16 +
+          Math.cos(t * 3 - phase) * 0.06
+        const radius = 2.32 + Math.sin(t * 5 + phase) * 0.035
+        const horizontal = Math.cos(latitude)
+        const x =
+          radius *
+          horizontal *
+          Math.cos(t + phase * 0.06) *
+          (1 + Math.sin(t * 2 + phase) * 0.045)
+        const y =
+          radius * Math.sin(latitude) +
+          Math.sin(t * 4 + phase) * 0.08 +
+          tilt
+        const z =
+          radius *
+          horizontal *
+          Math.sin(t + phase * 0.06) *
+          (1 + Math.cos(t * 3 + phase) * 0.035)
+        points.push(new THREE.Vector3(x, y, z))
+      }
+      const geometry = new THREE.BufferGeometry().setFromPoints(points)
+      const line = new THREE.Line(
+        geometry,
+        ribbonMaterials[band % ribbonMaterials.length]
+      )
+      line.rotation.y = (band % 7) * 0.11
+      line.rotation.z = (band % 4) * 0.08
+      sphereGroup.add(line)
+    }
+    const arcMaterials = [
+      new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.42,
+      }),
+      new THREE.LineBasicMaterial({
+        color: 0xa8a8a8,
+        transparent: true,
+        opacity: 0.28,
+      }),
+    ]
+    for (let arcIndex = 0; arcIndex < 9; arcIndex += 1) {
+      const points: THREE.Vector3[] = []
+      for (let i = 0; i <= 180; i += 1) {
+        const t = (i / 180) * Math.PI * 2
+        const radius = 2.38 + Math.sin(t * 4 + arcIndex) * 0.025
+        const x = radius * Math.cos(t)
+        const y =
+          Math.sin(t * 2 + arcIndex * 0.7) *
+          1.8 *
+          Math.sin(t + 0.4)
+        const z = radius * Math.sin(t)
+        points.push(new THREE.Vector3(x, y, z))
+      }
+      const geometry = new THREE.BufferGeometry().setFromPoints(points)
+      const line = new THREE.Line(
+        geometry,
+        arcMaterials[arcIndex % arcMaterials.length]
+      )
+      line.rotation.x = arcIndex * 0.23
+      line.rotation.y = arcIndex * 0.17
+      line.rotation.z = arcIndex * 0.09
+      sphereGroup.add(line)
+    }
+    const shieldShape = new THREE.Shape()
+    shieldShape.moveTo(0, 1.1)
+    shieldShape.lineTo(0.92, 0.68)
+    shieldShape.lineTo(0.78, -0.42)
+    shieldShape.quadraticCurveTo(0.52, -1.05, 0, -1.28)
+    shieldShape.quadraticCurveTo(-0.52, -1.05, -0.78, -0.42)
+    shieldShape.lineTo(-0.92, 0.68)
+    shieldShape.closePath()
+    const shieldGeometry = new THREE.ExtrudeGeometry(shieldShape, {
+      depth: 0.22,
+      bevelEnabled: true,
+      bevelSegments: 3,
+      bevelSize: 0.06,
+      bevelThickness: 0.05,
+      curveSegments: 8,
+    })
+    shieldGeometry.center()
+    const shieldMaterial = new THREE.MeshBasicMaterial({
+      color: 0xe8e8e8,
+      transparent: true,
+      opacity: 0.82,
+    })
+    const shield = new THREE.Mesh(shieldGeometry, shieldMaterial)
+    shield.scale.setScalar(0.64)
+    shield.position.set(0, 0, 0.28)
+    root.add(shield)
+    const shieldInnerMaterial = new THREE.LineBasicMaterial({
+      color: 0x111111,
+      transparent: true,
+      opacity: 0.8,
+    })
+    const shieldEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(shieldGeometry),
+      shieldInnerMaterial
+    )
+    shieldEdges.scale.copy(shield.scale)
+    shieldEdges.position.copy(shield.position)
+    root.add(shieldEdges)
+    const nucleusGeometry = new THREE.IcosahedronGeometry(0.32, 2)
+    const nucleusMaterial = new THREE.MeshBasicMaterial({
+      color: 0x0a0a0a,
+      transparent: true,
+      opacity: 0.96,
+      wireframe: true,
+    })
+    const nucleus = new THREE.Mesh(nucleusGeometry, nucleusMaterial)
+    nucleus.position.set(0, 0, 0.52)
+    root.add(nucleus)
+    const keyLight = new THREE.PointLight(0xffffff, 2.4, 8)
+    keyLight.position.set(0, 0.5, 2.8)
+    scene.add(keyLight)
+    const rimLight = new THREE.PointLight(0xdddddd, 1.2, 7)
+    rimLight.position.set(-3, 1.5, -2)
+    scene.add(rimLight)
+    const platformGroup = new THREE.Group()
+    platformGroup.position.y = -2.65
+    root.add(platformGroup)
+    const platformMaterials = [
+      new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.22,
+      }),
+      new THREE.LineBasicMaterial({
+        color: 0x888888,
+        transparent: true,
+        opacity: 0.16,
+      }),
+      new THREE.LineBasicMaterial({
+        color: 0x555555,
+        transparent: true,
+        opacity: 0.18,
+      }),
+    ]
+    const platformRadii = [2.1, 2.65, 3.15, 3.62, 4.05]
+    platformRadii.forEach((radius, index) => {
+      const geometry = new THREE.RingGeometry(
+        radius - 0.008,
+        radius + 0.008,
+        160
+      )
+      const ring = new THREE.Mesh(
+        geometry,
+        platformMaterials[index % platformMaterials.length]
+      )
+      ring.rotation.x = -Math.PI / 2
+      platformGroup.add(ring)
+    })
+    for (let ringIndex = 0; ringIndex < 7; ringIndex += 1) {
+      const radius = 2.35 + ringIndex * 0.29
+      const points: THREE.Vector3[] = []
+      for (let i = 0; i <= 120; i += 1) {
+        const t = (i / 120) * Math.PI * 1.18
+        points.push(
+          new THREE.Vector3(
+            Math.cos(t) * radius,
+            0,
+            Math.sin(t) * radius
+          )
+        )
+      }
+      const geometry = new THREE.BufferGeometry().setFromPoints(points)
+      const arc = new THREE.Line(
+        geometry,
+        platformMaterials[(ringIndex + 1) % platformMaterials.length]
+      )
+      arc.rotation.y = ringIndex * 0.6
+      platformGroup.add(arc)
+    }
+    const telemetryGroup = new THREE.Group()
+    root.add(telemetryGroup)
+    for (let i = 0; i < 72; i += 1) {
+      const angle = (i / 72) * Math.PI * 2
+      const radius = 2.5 + (i % 8) * 0.2
+      const height = 0.15 + (i % 9) * 0.13
+      const x = Math.cos(angle) * radius
+      const z = Math.sin(angle) * radius
+      const points = [
+        new THREE.Vector3(x, -2.6, z),
+        new THREE.Vector3(x, -2.6 + height, z),
+      ]
+      const geometry = new THREE.BufferGeometry().setFromPoints(points)
+      const material = new THREE.LineBasicMaterial({
+        color: i % 5 === 0 ? 0xffffff : 0x777777,
+        transparent: true,
+        opacity: i % 5 === 0 ? 0.42 : 0.18,
+      })
+      telemetryGroup.add(new THREE.Line(geometry, material))
+      if (i % 5 === 0) {
+        const nodeGeometry = new THREE.SphereGeometry(0.025, 8, 8)
+        const nodeMaterial = new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+        })
+        const node = new THREE.Mesh(nodeGeometry, nodeMaterial)
+        node.position.set(x, -2.6 + height, z)
+        telemetryGroup.add(node)
+      }
+    }
+    const particleCount = 900
+    const particlePositions = new Float32Array(particleCount * 3)
+    for (let i = 0; i < particleCount; i += 1) {
+      const index = i * 3
+      const radius = 5.5 + Math.random() * 5.5
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      particlePositions[index] =
+        Math.sin(phi) * Math.cos(theta) * radius
+      particlePositions[index + 1] =
+        Math.cos(phi) * radius * 0.62
+      particlePositions[index + 2] =
+        Math.sin(phi) * Math.sin(theta) * radius
+    }
+    const particleGeometry = new THREE.BufferGeometry()
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    )
+    const particleMaterial = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.012,
+      transparent: true,
+      opacity: 0.38,
+      sizeAttenuation: true,
+    })
+    const particles = new THREE.Points(
+      particleGeometry,
+      particleMaterial
+    )
+    scene.add(particles)
+    const floorGeometry = new THREE.CircleGeometry(4.6, 96)
+    const floorMaterial = new THREE.MeshBasicMaterial({
+      color: 0x050505,
+      transparent: true,
+      opacity: 0.6,
+      side: THREE.DoubleSide,
+    })
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial)
+    floor.rotation.x = -Math.PI / 2
+    floor.position.y = -2.72
+    root.add(floor)
+    const clock = new THREE.Clock()
+    const render = () => {
+      const elapsed = clock.getElapsedTime()
+      sphereGroup.rotation.y = elapsed * 0.055
+      sphereGroup.rotation.x =
+        -0.12 + Math.sin(elapsed * 0.18) * 0.035
+      shield.rotation.y = Math.sin(elapsed * 0.32) * 0.09
+      shield.rotation.x = Math.sin(elapsed * 0.24) * 0.045
+      shieldEdges.rotation.copy(shield.rotation)
+      nucleus.rotation.x = elapsed * 0.24
+      nucleus.rotation.y = elapsed * 0.38
+      nucleus.scale.setScalar(
+        1 + Math.sin(elapsed * 1.7) * 0.04
+      )
+      platformGroup.rotation.y = -elapsed * 0.018
+      telemetryGroup.rotation.y = elapsed * 0.018
+      particles.rotation.y = elapsed * 0.006
+      const pulse =
+        1.7 + Math.sin(elapsed * 1.35) * 0.35
+      keyLight.intensity = pulse
+      renderer?.render(scene, camera)
+      animationFrame = window.requestAnimationFrame(render)
+    }
+    render()
+    const handleResize = () => {
+      if (!renderer || !mount) {
+        return
+      }
+      const width = Math.max(mount.clientWidth, 1)
+      const height = Math.max(mount.clientHeight, 1)
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+      renderer.setSize(width, height)
+      renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, 2)
+      )
+    }
+    const resizeObserver = new ResizeObserver(handleResize)
+    resizeObserver.observe(mount)
+    return () => {
+      window.cancelAnimationFrame(animationFrame)
+      resizeObserver.disconnect()
+      scene.traverse((object) => {
+        const mesh = object as THREE.Mesh
+        if (mesh.geometry) {
+          mesh.geometry.dispose()
+        }
+        if (mesh.material) {
+          const materials = Array.isArray(mesh.material)
+            ? mesh.material
+            : [mesh.material]
+          materials.forEach((material) => material.dispose())
+        }
+      })
+      renderer?.dispose()
+      if (renderer?.domElement.parentElement === mount) {
+        mount.removeChild(renderer.domElement)
+      }
+    }
+  }, [])
+  return (
+    <div
+      ref={mountRef}
+      className="relative h-[540px] w-full"
+      aria-label="Three-dimensional QShieldX cryptographic security core"
+    >
+      <div className="absolute inset-x-12 bottom-12 h-24 rounded-full bg-white/[0.025] blur-3xl" />
+    </div>
+  )
+}
+function CryptoTelemetryCard({
+  icon: Icon,
+  label,
+  value,
+  className,
+}: {
+  icon: React.ElementType
+  label: string
+  value: string
+  className?: string
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: [0.62, 1, 0.62], y: [0, -5, 0] }}
+      transition={{
+        duration: 4.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      className={`absolute z-20 border border-white/10 bg-black/70 px-3 py-2.5 backdrop-blur-xl ${className ?? ""}`}
+    >
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-8 w-8 items-center justify-center border border-white/10 bg-white/[0.035]">
+          <Icon className="h-3.5 w-3.5 text-slate-300" />
+        </div>
+        <div>
+          <div className="text-[8px] uppercase tracking-[0.2em] text-slate-600">
+            {label}
+          </div>
+          <div className="mt-0.5 text-[11px] font-medium text-slate-200">
+            {value}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+function Navbar() {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <header className="relative z-50 border-b border-white/[0.06] bg-black/85 backdrop-blur-xl">
+      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
+        <Link href="/" className="group flex items-center gap-3">
+          <div className="relative flex h-9 w-9 items-center justify-center border border-white/15 bg-white/[0.03]">
+            <div className="absolute inset-1.5 border border-white/10" />
+            <Shield className="relative h-[17px] w-[17px] text-white" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold tracking-[0.18em] text-white">
+              QSHIELD<span className="text-slate-500">X</span>
+            </div>
+            <div className="text-[8px] uppercase tracking-[0.3em] text-slate-600">
+              Cryptographic Intelligence
+            </div>
+          </div>
+        </Link>
+        <nav className="hidden items-center gap-8 md:flex">
+          <a
+            href="#platform"
+            className="text-xs uppercase tracking-[0.12em] text-slate-500 transition hover:text-white"
+          >
+            Platform
+          </a>
+          <a
+            href="#workflow"
+            className="text-xs uppercase tracking-[0.12em] text-slate-500 transition hover:text-white"
+          >
+            Workflow
+          </a>
+          <a
+            href="#capabilities"
+            className="text-xs uppercase tracking-[0.12em] text-slate-500 transition hover:text-white"
+          >
+            Capabilities
+          </a>
+          <a
+            href="#security"
+            className="text-xs uppercase tracking-[0.12em] text-slate-500 transition hover:text-white"
+          >
+            Security
+          </a>
+        </nav>
+        <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
+          <Link
+            href="/login"
+            className="px-4 py-2.5 text-xs font-medium uppercase tracking-[0.1em] text-slate-400 transition hover:text-white"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 border border-white/20 bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-black transition hover:bg-slate-200"
+          >
+            Get started
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        <button
+          type="button"
+          aria-label="Toggle navigation"
+          onClick={() => setOpen((value) => !value)}
+          className="border border-white/10 p-2 text-slate-300 md:hidden"
+        >
+          {open ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+      {open && (
+        <div className="border-t border-white/[0.06] bg-black px-5 py-5 md:hidden">
+          <div className="flex flex-col gap-1">
+            {[
+              ["#platform", "Platform"],
+              ["#workflow", "Workflow"],
+              ["#capabilities", "Capabilities"],
+              ["#security", "Security"],
+            ].map(([href, label]) => (
+              <a
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className="px-3 py-3 text-xs uppercase tracking-[0.12em] text-slate-400 hover:text-white"
+              >
+                {label}
+              </a>
+            ))}
+            <div className="mt-3 flex gap-2 border-t border-white/[0.06] pt-4">
+              <Link
+                href="/login"
+                className="flex-1 border border-white/10 px-4 py-3 text-center text-xs uppercase tracking-[0.1em] text-slate-300"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="flex-1 bg-white px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.1em] text-black"
+              >
+                Get started
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  )
+}
+function Hero() {
+  return (
+    <section className="relative overflow-hidden border-b border-white/[0.05] bg-[#050505]">
+      <BackgroundGrid />
+      <FloatingParticles />
+      <div className="relative mx-auto grid min-h-[calc(100vh-76px)] max-w-7xl items-center gap-2 px-5 py-16 sm:px-8 lg:grid-cols-[0.93fr_1.07fr] lg:px-10 lg:py-20">
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={stagger}
+          className="relative z-30 max-w-2xl"
+        >
+          <motion.div variants={reveal}>
+            <div className="inline-flex items-center gap-2 border border-white/10 bg-white/[0.025] px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.24em] text-slate-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+              Enterprise Cryptographic Discovery
+            </div>
+          </motion.div>
+          <motion.h1
+            variants={reveal}
+            className="mt-7 text-5xl font-semibold leading-[0.94] tracking-[-0.055em] text-white sm:text-6xl lg:text-[72px] xl:text-[82px]"
+          >
+            Discover
+            <br />
+            the cryptographic
+            <br />
+            <span className="text-slate-500">unknown.</span>
+          </motion.h1>
+          <motion.p
+            variants={reveal}
+            className="mt-7 max-w-xl text-base leading-7 text-slate-500 sm:text-lg"
+          >
+            QShieldX maps cryptographic assets across enterprise
+            infrastructure, turns discovery into structured CBOM
+            intelligence, and helps teams prepare for the post-quantum era.
+          </motion.p>
+          <motion.div
+            variants={reveal}
+            className="mt-8 flex flex-col gap-3 sm:flex-row"
+          >
+            <Link
+              href="/register"
+              className="group inline-flex items-center justify-center gap-2 bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-black transition hover:bg-slate-200"
+            >
+              Explore QShieldX
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <a
+              href="#platform"
+              className="inline-flex items-center justify-center gap-2 border border-white/10 bg-white/[0.02] px-5 py-3 text-xs font-medium uppercase tracking-[0.1em] text-slate-300 transition hover:border-white/20 hover:text-white"
+            >
+              View platform
+              <ChevronRight className="h-4 w-4" />
+            </a>
+          </motion.div>
+          <motion.div
+            variants={reveal}
+            className="mt-9 flex flex-wrap gap-x-5 gap-y-3 text-[10px] uppercase tracking-[0.12em] text-slate-600"
+          >
+            <span className="flex items-center gap-2">
+              <CircleCheck className="h-3.5 w-3.5 text-slate-400" />
+              Asset discovery
+            </span>
+            <span className="flex items-center gap-2">
+              <CircleCheck className="h-3.5 w-3.5 text-slate-400" />
+              CBOM intelligence
+            </span>
+            <span className="flex items-center gap-2">
+              <CircleCheck className="h-3.5 w-3.5 text-slate-400" />
+              PQC readiness
+            </span>
+          </motion.div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.94 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.1, delay: 0.15, ease }}
+          className="relative z-20 -mx-4 sm:-mx-8 lg:mx-0"
+        >
+          <CryptoSphere3D />
+          <CryptoTelemetryCard
+            icon={LockKeyhole}
+            label="TLS"
+            value="Protected"
+            className="left-[8%] top-[26%]"
+          />
+          <CryptoTelemetryCard
+            icon={KeyRound}
+            label="PQC"
+            value="Assessment"
+            className="right-[7%] top-[18%]"
+          />
+          <CryptoTelemetryCard
+            icon={Database}
+            label="CBOM"
+            value="12.8K assets"
+            className="bottom-[17%] left-[8%]"
+          />
+          <CryptoTelemetryCard
+            icon={Radar}
+            label="Risk engine"
+            value="Analyzing"
+            className="bottom-[13%] right-[6%]"
+          />
+        </motion.div>
+      </div>
+      <div className="relative mx-auto max-w-7xl px-5 pb-12 sm:px-8 lg:px-10">
+        <div className="grid grid-cols-2 border border-white/[0.07] bg-black/50 sm:grid-cols-4">
+          {[
+            ["12.8K+", "Crypto assets"],
+            ["42", "Algorithms"],
+            ["3.4K+", "Certificates"],
+            ["186", "Risk signals"],
+          ].map(([value, label], index) => (
+            <div
+              key={label}
+              className={`px-5 py-5 sm:px-6 ${
+                index !== 0 ? "border-l border-white/[0.07]" : ""
+              }`}
+            >
+              <div className="text-2xl font-semibold tracking-tight text-white">
+                {value}
+              </div>
+              <div className="mt-1 text-[9px] uppercase tracking-[0.18em] text-slate-600">
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+function PlatformPreview() {
+  return (
+    <section id="platform" className="relative border-b border-white/[0.05] py-24">
+      <BackgroundGrid />
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+        <SectionHeading
+          eyebrow="The platform"
+          title="A command layer for cryptographic visibility."
+          description="Bring discovery, inventory, analysis, and readiness signals into one security workflow."
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 34 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.12 }}
+          transition={{ duration: 0.8, ease }}
+          className="mt-14 overflow-hidden border border-white/[0.08] bg-[#080808]"
+        >
+          <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-4">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-white/50" />
+              <div className="h-2 w-2 rounded-full bg-white/20" />
+              <div className="h-2 w-2 rounded-full bg-white/10" />
+              <span className="ml-3 text-[9px] uppercase tracking-[0.16em] text-slate-600">
+                qshieldx / cryptographic intelligence
+              </span>
+            </div>
+            <div className="hidden items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-slate-600 sm:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+              Live analysis
+            </div>
+          </div>
+          <div className="grid lg:grid-cols-[210px_1fr]">
+            <aside className="hidden border-r border-white/[0.06] p-4 lg:block">
+              <div className="mb-6 flex items-center gap-2 px-2">
+                <div className="flex h-7 w-7 items-center justify-center border border-white/10 bg-white/[0.035]">
+                  <Shield className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-xs font-semibold text-slate-200">
+                  QShieldX
+                </span>
+              </div>
+              <div className="space-y-1">
+                {[
+                  ["Overview", true],
+                  ["Cryptographic Assets", false],
+                  ["CBOM", false],
+                  ["Quantum Risk", false],
+                  ["Targets", false],
+                ].map(([name, active]) => (
+                  <div
+                    key={String(name)}
+                    className={`px-3 py-2 text-[10px] ${
+                      active
+                        ? "border border-white/10 bg-white/[0.06] text-white"
+                        : "text-slate-600"
+                    }`}
+                  >
+                    {name}
+                  </div>
+                ))}
+              </div>
+            </aside>
+            <div className="p-5 sm:p-7">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-slate-600">
+                    Enterprise overview
+                  </p>
+                  <h3 className="mt-1 text-xl font-semibold text-white">
+                    Cryptographic posture
+                  </h3>
+                </div>
+                <div className="inline-flex w-fit items-center gap-2 border border-white/10 bg-white/[0.025] px-3 py-2 text-[9px] uppercase tracking-[0.12em] text-slate-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+                  Scan healthy
+                </div>
+              </div>
+              <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  ["Assets discovered", "12,842", "+18.4%"],
+                  ["Certificates", "3,421", "+8.2%"],
+                  ["Quantum exposed", "186", "-4.6%"],
+                  ["PQC ready", "61%", "+11.8%"],
+                ].map(([label, value, change]) => (
+                  <div
+                    key={label}
+                    className="border border-white/[0.07] bg-white/[0.02] p-4"
+                  >
+                    <div className="text-[10px] text-slate-600">{label}</div>
+                    <div className="mt-2 flex items-end justify-between gap-2">
+                      <span className="text-2xl font-semibold text-white">
+                        {value}
+                      </span>
+                      <span className="text-[9px] text-slate-500">
+                        {change}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_.8fr]">
+                <div className="border border-white/[0.07] bg-white/[0.02] p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] text-slate-600">
+                        Discovery activity
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-slate-300">
+                        Cryptographic assets over time
+                      </p>
+                    </div>
+                    <Globe2 className="h-4 w-4 text-slate-600" />
+                  </div>
+                  <div className="mt-8 flex h-40 items-end gap-2">
+                    {[36, 52, 44, 66, 58, 78, 68, 86, 73, 92, 80, 96].map(
+                      (height, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ height: 0 }}
+                          whileInView={{ height: `${height}%` }}
+                          viewport={{ once: true }}
+                          transition={{
+                            duration: 0.7,
+                            delay: index * 0.035,
+                            ease,
+                          }}
+                          className="flex-1 rounded-t-[1px] bg-white/25"
+                        />
+                      )
+                    )}
+                  </div>
+                </div>
+                <div className="border border-white/[0.07] bg-white/[0.02] p-5">
+                  <p className="text-[10px] text-slate-600">
+                    Risk distribution
+                  </p>
+                  <div className="mt-5 flex items-center justify-center">
+                    <div className="relative flex h-36 w-36 items-center justify-center rounded-full border-[12px] border-white/10 border-r-white/40 border-t-white/60">
+                      <div className="text-center">
+                        <div className="text-3xl font-semibold text-white">
+                          186
+                        </div>
+                        <div className="text-[8px] uppercase tracking-[0.15em] text-slate-600">
+                          signals
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5 space-y-2 text-[10px]">
+                    {[
+                      ["Low", "58%"],
+                      ["Medium", "27%"],
+                      ["High", "15%"],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="flex items-center justify-between text-slate-500"
+                      >
+                        <span>{label}</span>
+                        <span className="text-slate-300">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+function FeatureGrid() {
+  return (
+    <section className="relative py-24">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+        <SectionHeading
+          eyebrow="Core capabilities"
+          title="From discovery to readiness."
+          description="Build a living picture of where cryptography exists, what it depends on, and where migration effort is needed."
+        />
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.1 }}
+          className="mt-14 grid gap-px border border-white/[0.07] bg-white/[0.07] md:grid-cols-2 lg:grid-cols-3"
+        >
+          {features.map((feature) => {
+            const Icon = feature.icon
+            return (
+              <motion.div
+                key={feature.title}
+                variants={reveal}
+                className="group relative bg-[#080808] p-6 transition duration-500 hover:bg-white/[0.035]"
+              >
+                <div className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.025]">
+                  <Icon className="h-4.5 w-4.5 text-slate-300" />
+                </div>
+                <h3 className="mt-5 text-base font-semibold text-white">
+                  {feature.title}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {feature.description}
+                </p>
+                <div className="mt-5 flex items-center gap-1 text-[9px] font-medium uppercase tracking-[0.14em] text-slate-500 opacity-0 transition group-hover:opacity-100">
+                  Explore capability
+                  <ArrowUpRight className="h-3 w-3" />
+                </div>
+              </motion.div>
+            )
+          })}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+function Workflow() {
+  return (
+    <section
+      id="workflow"
+      className="relative overflow-hidden border-y border-white/[0.05] bg-white/[0.012] py-24"
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+        <div className="grid gap-14 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
+          <SectionHeading
+            eyebrow="Workflow"
+            title="One continuous cryptographic intelligence loop."
+            description="Connect discovery and analysis so teams can move from scattered cryptographic evidence to an organized readiness program."
+          />
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.15 }}
+            className="relative"
+          >
+            <div className="absolute bottom-8 left-[27px] top-8 hidden w-px bg-gradient-to-b from-white/30 via-white/10 to-transparent sm:block" />
+            <div className="space-y-5">
+              {workflow.map((item) => {
+                const Icon = item.icon
+                return (
+                  <motion.div
+                    key={item.number}
+                    variants={reveal}
+                    className="relative grid gap-4 border border-white/[0.07] bg-black/50 p-5 sm:grid-cols-[56px_1fr] sm:items-center"
+                  >
+                    <div className="relative z-10 flex h-14 w-14 items-center justify-center border border-white/10 bg-black text-slate-300">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-[9px] font-medium uppercase tracking-[0.2em] text-slate-600">
+                        Step {item.number}
+                      </div>
+                      <h3 className="mt-1 text-base font-semibold text-white">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        {item.text}
+                      </p>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+function Capabilities() {
+  return (
+    <section id="capabilities" className="relative py-24">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+        <div className="border border-white/[0.07] bg-[#080808]">
+          <div className="grid lg:grid-cols-[.9fr_1.1fr]">
+            <div className="border-b border-white/[0.06] p-8 sm:p-10 lg:border-b-0 lg:border-r lg:p-14">
+              <div className="flex h-11 w-11 items-center justify-center border border-white/10 bg-white/[0.025]">
+                <Cpu className="h-5 w-5 text-slate-300" />
+              </div>
+              <h2 className="mt-7 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                Built for the cryptographic layer of modern infrastructure.
+              </h2>
+              <p className="mt-5 text-sm leading-7 text-slate-600">
+                Cryptography is distributed across applications, networks,
+                certificates, services, libraries, devices, and operational
+                tooling. QShieldX turns that distributed footprint into
+                structured security intelligence.
+              </p>
+              <Link
+                href="/register"
+                className="group mt-8 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
+              >
+                Start exploring
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+            <div className="p-8 sm:p-10 lg:p-14">
+              <div className="grid gap-px border border-white/[0.07] bg-white/[0.07] sm:grid-cols-2">
+                {capabilities.map((item, index) => (
+                  <motion.div
+                    key={item}
+                    initial={{ opacity: 0, x: 12 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{
+                      duration: 0.45,
+                      delay: index * 0.045,
+                      ease,
+                    }}
+                    className="flex items-start gap-3 bg-[#080808] p-4"
+                  >
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-white/10">
+                      <Check className="h-3 w-3 text-slate-300" />
+                    </div>
+                    <span className="text-sm leading-5 text-slate-400">
+                      {item}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+function SecuritySection() {
+  return (
+    <section id="security" className="relative border-t border-white/[0.05] py-24">
+      <BackgroundGrid />
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+        <SectionHeading
+          eyebrow="Security by design"
+          title="Make cryptographic risk visible."
+          description="A strong security posture starts with knowing where cryptography is used, how it is connected, and what needs attention."
+        />
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.1 }}
+          className="mt-14 grid gap-px border border-white/[0.07] bg-white/[0.07] md:grid-cols-3"
+        >
+          {securityItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <motion.div
+                key={item.title}
+                variants={reveal}
+                className="bg-[#080808] p-6"
+              >
+                <div className="flex h-10 w-10 items-center justify-center border border-white/10 bg-white/[0.025]">
+                  <Icon className="h-4.5 w-4.5 text-slate-300" />
+                </div>
+                <h3 className="mt-5 text-base font-semibold text-white">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {item.text}
+                </p>
+              </motion.div>
+            )
+          })}
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease }}
+          className="mt-6 border border-white/[0.07] bg-white/[0.02] p-6 sm:p-8"
+        >
+          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/10">
+                <ShieldCheck className="h-4 w-4 text-slate-300" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">
+                  Cryptographic visibility is a security control.
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                  Identify what exists before deciding what needs to change.
+                  QShieldX provides the inventory and intelligence layer for
+                  that process.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/register"
+              className="inline-flex shrink-0 items-center justify-center gap-2 border border-white/15 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-300 transition hover:bg-white hover:text-black"
+            >
+              Explore
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+function CTA() {
+  return (
+    <section className="relative overflow-hidden border-t border-white/[0.05] py-24">
+      <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.025] blur-[120px]" />
+      <div className="relative mx-auto max-w-4xl px-5 text-center sm:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease }}
+        >
+          <div className="mx-auto flex h-14 w-14 items-center justify-center border border-white/15 bg-white/[0.03]">
+            <Shield className="h-6 w-6 text-white" />
+          </div>
+          <h2 className="mt-7 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+            Know what exists.
+            <br />
+            Prepare for what&apos;s next.
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600">
+            Start with discovery. Understand your cryptographic footprint.
+            Build the intelligence needed for a practical post-quantum
+            readiness program.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link
+              href="/register"
+              className="group inline-flex items-center justify-center gap-2 bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-black transition hover:bg-slate-200"
+            >
+              Get started with QShieldX
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center gap-2 border border-white/10 bg-white/[0.02] px-5 py-3 text-xs font-medium uppercase tracking-[0.1em] text-slate-400 transition hover:text-white"
+            >
+              Sign in
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+function Footer() {
+  return (
+    <footer className="border-t border-white/[0.06]">
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
+        <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+          <div>
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center border border-white/15 bg-white/[0.03]">
+                <Shield className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-sm font-semibold tracking-[0.16em] text-white">
+                QSHIELD<span className="text-slate-500">X</span>
+              </span>
+            </Link>
+            <p className="mt-3 max-w-sm text-xs leading-5 text-slate-700">
+              Enterprise cryptographic discovery, CBOM intelligence, and
+              post-quantum readiness.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-3 text-[10px] uppercase tracking-[0.12em] text-slate-600">
+            <a href="#platform" className="hover:text-white">
+              Platform
+            </a>
+            <a href="#workflow" className="hover:text-white">
+              Workflow
+            </a>
+            <a href="#capabilities" className="hover:text-white">
+              Capabilities
+            </a>
+            <a href="#security" className="hover:text-white">
+              Security
+            </a>
+            <Link href="/login" className="hover:text-white">
+              Sign in
+            </Link>
+          </div>
+          <div className="flex h-9 w-9 items-center justify-center border border-white/10 text-slate-600">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
+        </div>
+        <div className="mt-8 border-t border-white/[0.05] pt-6 text-[10px] uppercase tracking-[0.1em] text-slate-700">
+          © {new Date().getFullYear()} QShieldX. Cryptographic intelligence
+          platform.
+        </div>
+      </div>
+    </footer>
+  )
+}
+export default function LandingPage() {
+  const { scrollYProgress } = useScroll()
+  const progress = useTransform(
+    scrollYProgress,
+    [0, 1],
+    ["0%", "100%"]
+  )
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#050505] text-white selection:bg-white/10 selection:text-white">
+      <motion.div
+        style={{ width: progress }}
+        className="fixed left-0 top-0 z-[100] h-[1px] bg-white"
+      />
+      <Navbar />
+      <Hero />
+      <PlatformPreview />
+      <FeatureGrid />
+      <Workflow />
+      <Capabilities />
+      <SecuritySection />
+      <CTA />
+      <Footer />
+    </main>
+  )
 }
