@@ -1,5 +1,5 @@
-// OOP: Encapsulation — This component encapsulates registration form state and validation.
-// OOP: Abstraction — Offers a simple registration interface while hiding form submission and routing logic.
+ // OOP: Encapsulation — This component encapsulates registration form state and validation.
+ // OOP: Abstraction — Offers a simple registration interface while hiding form submission and routing logic.
 
 "use client";
 

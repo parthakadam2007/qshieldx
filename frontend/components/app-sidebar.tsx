@@ -43,7 +43,7 @@ const navData = {
   navMain: [
     {
       title: "Overview",
-      url: "/",
+      url: "/overview",
       icon: Map,
       isActive: true,
     },
