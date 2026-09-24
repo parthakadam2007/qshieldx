@@ -19,6 +19,7 @@ import { ArrowRight, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-r
 
 import { Input } from "@/components/ui/input"
 import { useGlobalData } from "@/app/context/GlobalDataContext"
+import { DEMO_CRYPTO_ASSET_COUNT } from "@/lib/demo-metrics"
 
 export default function AssetsPage() {
   const { data: globalData, isDemoMode } = useGlobalData();
@@ -38,8 +39,8 @@ export default function AssetsPage() {
         : globalData.assets.filter((asset) => String(asset.targetId || globalData.targets[0]?.id) === selectedTarget)
       const start = (currentPage - 1) * 10
       setPagedAssets(source.slice(start, start + 10))
-      setTotalCount(selectedTarget === "all" ? globalData.scan?.assetCount || 148 : source.length)
-      setTotalPages(Math.ceil((selectedTarget === "all" ? globalData.scan?.assetCount || 148 : source.length) / 10))
+      setTotalCount(selectedTarget === "all" ? globalData.scan?.assetCount || DEMO_CRYPTO_ASSET_COUNT : source.length)
+      setTotalPages(Math.ceil((selectedTarget === "all" ? globalData.scan?.assetCount || DEMO_CRYPTO_ASSET_COUNT : source.length) / 10))
       setIsLoading(false)
       return
     }

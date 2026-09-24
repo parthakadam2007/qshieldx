@@ -1,0 +1,1 @@
+export const DEMO_CRYPTO_ASSET_COUNT = 26
