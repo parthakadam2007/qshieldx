@@ -172,30 +172,7 @@ function formatReportDate(
     return "Date unavailable"
   }
 
-  React.useEffect(() => {
-    document.title = "Reports Center | QShieldX"
-    
-    async function fetchReports() {
-      if (isDemoMode && data.cbom) {
-        const demoReport = { id: data.scan.id, created_at: data.scan.completed, scan_jobs: { target_domain: data.scan.primaryDomain }, report_json: data.cbom, executive_summary: `mypay Software Pvt. Ltd. has ${DEMO_CRYPTO_ASSET_COUNT} cryptographic assets across its enterprise payment platform. The scan identified 61 quantum-vulnerable components, 36 certificates, and 9 exposed secrets. Wave 1 should prioritize public payment and identity endpoints with hybrid ML-KEM and ML-DSA transitions.` }
-        setReports([demoReport])
-        setSelectedReport(demoReport)
-        setIsLoading(false)
-        return
-      }
-      const { data: reportsData, error } = await supabase
-        .from('cbom_reports')
-        .select(`*, scan_jobs ( target_domain )`)
-        .order('created_at', { ascending: false })
-      
-      if (!error && reportsData) {
-        setReports(reportsData)
-        if (reportsData.length > 0) {
-          setSelectedReport(reportsData[0]) 
-        }
-      }
-    )
-  }
+  const raw = String(value).trim()
 
   /*
    * Handle human-readable demo timestamps.
