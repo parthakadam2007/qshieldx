@@ -99,7 +99,6 @@ import { ExecutiveSummary } from "../cbom/ExecutiveSummary"
 
 import { CBOMComponent } from "./CbomInterfaces"
 
-import "@xyflow/react/dist/style.css"
 
 
 /* ============================================================
@@ -165,43 +164,42 @@ function normalizeFilterValue(
  * - demo strings such as:
  *   "31 Aug 2026 · 07:42 PM IST"
  */
-function formatReportDate(
-  value: unknown
-) {
+ function formatReportDate(value: unknown): string {
   if (!value) {
-    return "Date unavailable"
+    return "Date unavailable";
   }
+
 
   const raw = String(value).trim()
 
-  /*
-   * Handle human-readable demo timestamps.
-   *
-   * Example:
-   * 31 Aug 2026 · 07:42 PM IST
-   */
-  const humanDateMatch =
-    raw.match(
-      /^(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/
-    )
+  // Handle ISO dates and standard date strings.
+  const parsed = new Date(raw);
+
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+
+  // Handle demo timestamps such as:
+  // "31 Aug 2026 · 07:42 PM IST"
+  const humanDateMatch = raw.match(
+    /^(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/
+  );
 
   if (humanDateMatch?.[1]) {
-    return humanDateMatch[1]
+    return humanDateMatch[1];
   }
 
-  /*
-   * If it contains the separator, use the
-   * portion before it.
-   */
   if (raw.includes("·")) {
-    return raw
-      .split("·")[0]
-      .trim()
+    return raw.split("·")[0].trim();
   }
 
-  return raw
+  return raw;
 }
-
 
 /*
  * Return a safe report display name.
