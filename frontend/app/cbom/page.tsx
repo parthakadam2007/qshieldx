@@ -99,7 +99,6 @@ import { ExecutiveSummary } from "../cbom/ExecutiveSummary"
 
 import { CBOMComponent } from "./CbomInterfaces"
 
-import "@xyflow/react/dist/style.css"
 
 
 /* ============================================================
@@ -165,66 +164,40 @@ function normalizeFilterValue(
  * - demo strings such as:
  *   "31 Aug 2026 · 07:42 PM IST"
  */
-function formatReportDate(
-  value: unknown
-) {
+ function formatReportDate(value: unknown): string {
   if (!value) {
-    return "Date unavailable"
+    return "Date unavailable";
   }
 
-  React.useEffect(() => {
-    document.title = "Reports Center | QShieldX"
-    
-    async function fetchReports() {
-      if (isDemoMode && data.cbom) {
-        const demoReport = { id: data.scan.id, created_at: data.scan.completed, scan_jobs: { target_domain: data.scan.primaryDomain }, report_json: data.cbom, executive_summary: `mypay Software Pvt. Ltd. has ${DEMO_CRYPTO_ASSET_COUNT} cryptographic assets across its enterprise payment platform. The scan identified 61 quantum-vulnerable components, 36 certificates, and 9 exposed secrets. Wave 1 should prioritize public payment and identity endpoints with hybrid ML-KEM and ML-DSA transitions.` }
-        setReports([demoReport])
-        setSelectedReport(demoReport)
-        setIsLoading(false)
-        return
-      }
-      const { data: reportsData, error } = await supabase
-        .from('cbom_reports')
-        .select(`*, scan_jobs ( target_domain )`)
-        .order('created_at', { ascending: false })
-      
-      if (!error && reportsData) {
-        setReports(reportsData)
-        if (reportsData.length > 0) {
-          setSelectedReport(reportsData[0]) 
-        }
-      }
-    )
+  const raw = String(value).trim();
+
+  // Handle ISO dates and standard date strings.
+  const parsed = new Date(raw);
+
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   }
 
-  /*
-   * Handle human-readable demo timestamps.
-   *
-   * Example:
-   * 31 Aug 2026 · 07:42 PM IST
-   */
-  const humanDateMatch =
-    raw.match(
-      /^(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/
-    )
+  // Handle demo timestamps such as:
+  // "31 Aug 2026 · 07:42 PM IST"
+  const humanDateMatch = raw.match(
+    /^(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/
+  );
 
   if (humanDateMatch?.[1]) {
-    return humanDateMatch[1]
+    return humanDateMatch[1];
   }
 
-  /*
-   * If it contains the separator, use the
-   * portion before it.
-   */
   if (raw.includes("·")) {
-    return raw
-      .split("·")[0]
-      .trim()
+    return raw.split("·")[0].trim();
   }
 
-  return raw
+  return raw;
 }
-
 
 /*
  * Return a safe report display name.

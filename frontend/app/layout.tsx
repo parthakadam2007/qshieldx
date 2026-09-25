@@ -6,6 +6,7 @@ import { Metadata } from "next"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 import "./globals.css"
+import "@xyflow/react/dist/style.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { GlobalDataProvider } from "@/app/context/GlobalDataContext"
 import { AppLayoutWrapper } from "@/components/app-layout-wrapper"
