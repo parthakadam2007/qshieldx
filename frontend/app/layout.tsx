@@ -10,6 +10,7 @@ import "@xyflow/react/dist/style.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { GlobalDataProvider } from "@/app/context/GlobalDataContext"
 import { AppLayoutWrapper } from "@/components/app-layout-wrapper"
+import GlobalChatbot from "@/components/ai/global-chatbot";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
@@ -48,6 +49,7 @@ export default function RootLayout({
               <AppLayoutWrapper>
                 {children}
               </AppLayoutWrapper>
+              <GlobalChatbot />
             </TooltipProvider>
           </ThemeProvider>
         </GlobalDataProvider>
