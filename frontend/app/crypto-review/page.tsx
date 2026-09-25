@@ -92,15 +92,17 @@ function GitLabIcon({ className = "size-5" }: { className?: string }) {
 
 export default function CryptoReviewPage() {
   const router = useRouter()
+  const [isPageLoading, setIsPageLoading] = React.useState(true)
 
   // Connection State
-  const [isConnected, setIsConnected] = React.useState<boolean>(true)
+  const [isConnected, setIsConnected] = React.useState<boolean>(false)
   const [activeProvider, setActiveProvider] = React.useState<"github" | "gitlab">("github")
 
   // Connection Flow Modal State
   const [isConnectModalOpen, setIsConnectModalOpen] = React.useState(false)
   const [connectStep, setConnectStep] = React.useState<1 | 2 | 3 | 4>(1)
   const [isConnecting, setIsConnecting] = React.useState(false)
+  const [gitToken, setGitToken] = React.useState("")
   const [selectedRepos, setSelectedRepos] = React.useState<string[]>([
     "payment-service",
     "auth-service",
@@ -123,6 +125,12 @@ export default function CryptoReviewPage() {
   // Data
   const [reviews] = React.useState<PRReview[]>(initialPRReviews)
 
+  React.useEffect(() => {
+    const loadingTimer = window.setTimeout(() => setIsPageLoading(false), 5000)
+
+    return () => window.clearTimeout(loadingTimer)
+  }, [])
+
   const showToast = (msg: string) => {
     setToastMessage(msg)
     setTimeout(() => setToastMessage(null), 3500)
@@ -132,17 +140,20 @@ export default function CryptoReviewPage() {
   const handleOpenConnect = (provider: "github" | "gitlab") => {
     setActiveProvider(provider)
     setConnectStep(1)
+    setGitToken("")
     setWebhookTestSuccess(false)
     setIsConnectModalOpen(true)
   }
 
   // Step 1 -> Step 2: Authorize & Connect
   const handleAuthorizeProvider = () => {
+    if (!gitToken.trim() || isConnecting) return
+
     setIsConnecting(true)
     setTimeout(() => {
       setIsConnecting(false)
       setConnectStep(2)
-    }, 900)
+    }, 5000)
   }
 
   // Step 2 -> Step 3: Enable and Configure Webhook
@@ -266,6 +277,13 @@ const fetchProducts = async () => {
 
   return (
     <div className="space-y-6 pb-12">
+      {isPageLoading ? (
+        <div className="flex min-h-[75vh] flex-col items-center justify-center gap-3 text-muted-foreground">
+          <Activity className="size-8 animate-spin text-primary" />
+          <span className="text-sm">Loading Crypto Review...</span>
+        </div>
+      ) : (
+        <>
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-xl animate-in fade-in slide-in-from-top-3">
@@ -285,9 +303,9 @@ const fetchProducts = async () => {
                 <Lock className="size-3 text-primary" />
                 <span>PQ-Guard Cryptographic Pull Request Guardian</span>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight">Crypto Review</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Connect GitHub</h1>
               <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                Automatically review pull requests for cryptographic and post-quantum security risks.
+                Connect GitHub to start reviewing pull requests for cryptographic and post-quantum security risks.
               </p>
             </div>
 
@@ -298,9 +316,9 @@ const fetchProducts = async () => {
                 <div className="mx-auto size-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
                   <Lock className="size-7 text-primary" />
                 </div>
-                <CardTitle className="text-xl font-semibold">Connect your repository</CardTitle>
+                <CardTitle className="text-xl font-semibold">Connect GitHub to begin</CardTitle>
                 <CardDescription className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
-                  Connect GitHub or GitLab to automatically analyze cryptographic changes in your PRs.
+                  Automatically analyze cryptographic changes in your GitHub pull requests.
                 </CardDescription>
               </CardHeader>
 
@@ -734,6 +752,24 @@ const fetchProducts = async () => {
           {/* STEP 1: PERMISSIONS LIST */}
           {connectStep === 1 && (
             <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="git-token" className="text-xs font-semibold">
+                  {activeProvider === "github" ? "GitHub" : "GitLab"} Personal Access Token
+                </Label>
+                <Input
+                  id="git-token"
+                  type="password"
+                  value={gitToken}
+                  onChange={(event) => setGitToken(event.target.value)}
+                  placeholder={activeProvider === "github" ? "ghp_..." : "glpat-..."}
+                  className="h-9 text-xs"
+                  autoComplete="off"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Your token is used to access repositories and pull request changes for review.
+                </p>
+              </div>
+
               <p className="text-xs text-muted-foreground">
                 Grant PQ-Guard permissions to inspect code changes and provide cryptographic risk reviews on pull requests:
               </p>
@@ -758,10 +794,10 @@ const fetchProducts = async () => {
                 <Button variant="outline" size="sm" onClick={() => setIsConnectModalOpen(false)}>
                   Cancel
                 </Button>
-                <Button size="sm" onClick={handleAuthorizeProvider} disabled={isConnecting}>
+                <Button size="sm" onClick={handleAuthorizeProvider} disabled={isConnecting || !gitToken.trim()}>
                   {isConnecting ? (
                     <span className="flex items-center gap-2">
-                      <Activity className="size-3.5 animate-spin" /> Authorizing...
+                      <Activity className="size-3.5 animate-spin" /> Connecting...
                     </span>
                   ) : (
                     `Connect ${activeProvider === "github" ? "GitHub" : "GitLab"}`
@@ -1011,6 +1047,8 @@ const fetchProducts = async () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </>
+      )}
     </div>
   )
 }
