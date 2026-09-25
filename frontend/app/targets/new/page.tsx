@@ -33,6 +33,14 @@ export default function WizardPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isBuildingCbom, setIsBuildingCbom] = React.useState(false)
   const [cbomStep, setCbomStep] = React.useState(0)
+  
+const [primaryDomain, setPrimaryDomain] = React.useState("mypay.com");
+  const [sourceType, setSourceType] = React.useState("repository");
+const [sourceFiles, setSourceFiles] = React.useState<File[]>([]);
+const [containerImage, setContainerImage] = React.useState("");
+const [dataShelfLife, setDataShelfLife] = React.useState(12);
+const [businessCriticality, setBusinessCriticality] =
+  React.useState("critical");
 
   // Step 1 Form Data
   const [orgName, setOrgName] = React.useState("")
@@ -104,7 +112,7 @@ export default function WizardPage() {
     })
 
     setTimeout(() => {
-      router.push("/")
+      router.push("/overview")
     }, 4000)
   }
 
@@ -236,71 +244,291 @@ export default function WizardPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden relative min-h-[500px]">
-        <div className="absolute inset-0 transition-opacity duration-300">
+      <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+       <div className="relative w-full transition-opacity duration-300">
           {/* STEP 1: ORGANIZATION SCOPE */}
           {step === 1 && (
-            <div className="space-y-6 pb-20 animate-in fade-in slide-in-from-right-4 duration-300">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Building2 className="size-5 text-primary"/> Organization Details</CardTitle>
-                  <CardDescription>Primary identification and business context for risk scoring.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="w-full space-y-6 pb-8 animate-in fade-in slide-in-from-right-4 duration-300">
+            <Card className="w-full border-border/70 bg-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="size-5 text-primary" />
+                  Organization Details
+                </CardTitle>
+
+                <CardDescription>
+                  Configure your organization and select the sources QShieldX
+                  should inspect for cryptographic assets and quantum risks.
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                {/* Organization, domain, discovery type, industry */}
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="min-w-0 space-y-2">
+                    <label className="text-sm font-medium">
+                      Organization Name <span className="text-destructive">*</span>
+                    </label>
+
+                    <Input
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      placeholder="Example: Acme Technologies"
+                    />
+                  </div>
+
+                  <div className="min-w-0 space-y-2">
+                    <label className="text-sm font-medium">
+                      Primary Domain <span className="text-destructive">*</span>
+                    </label>
+
+                    <Input
+                      value={domain}
+                      onChange={(e) => setDomain(e.target.value)}
+                      placeholder="example.com"
+                    />
+                  </div>
+
+                  <div className="min-w-0 space-y-2">
+                    <label className="text-sm font-medium">
+                      Discovery Target Type <span className="text-destructive">*</span>
+                    </label>
+
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Select the source containing the assets you want to analyze.
+                    </p>
+
+                    <select
+                      className="flex h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={sourceType}
+                      onChange={(e) => {
+                        setSourceType(e.target.value);
+                        setSourceFiles([]);
+                        setContainerImage("");
+                      }}
+                    >
+                      <option value="repository">Source Code — Git Repository</option>
+                      <option value="zip">Source Code — ZIP Archive</option>
+                      <option value="binary">Binary — Executable / Compiled Artifact</option>
+                      <option value="library">Libraries — JAR / DLL / SO / Packages</option>
+                      <option value="container">Container Image — Docker / OCI</option>
+                    </select>
+                  </div>
+
+                  <div className="min-w-0 space-y-2">
+                    <label className="text-sm font-medium">Industry</label>
+
+                    <select
+                      className="flex h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                    >
+                      <option value="">Select Industry</option>
+                      <option value="financial">Financial Services / FinTech</option>
+                      <option value="healthcare">Healthcare / Life Sciences</option>
+                      <option value="technology">Technology / Software</option>
+                      <option value="government">Government / Defense</option>
+                      <option value="telecom">Telecommunications</option>
+                      <option value="energy">Energy / Utilities</option>
+                      <option value="retail">Retail / E-Commerce</option>
+                      <option value="manufacturing">Manufacturing / Industrial</option>
+                      <option value="education">Education / Research</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Target input: always full width */}
+                <div className="w-full space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4 sm:p-5">
+                  <div>
+                    <h3 className="text-sm font-semibold">Discovery Target</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {sourceType === "repository" &&
+                        "Provide the Git repository URL containing the source code."}
+                      {sourceType === "zip" &&
+                        "Upload a ZIP archive containing the source code."}
+                      {sourceType === "binary" &&
+                        "Upload compiled artifacts for static analysis."}
+                      {sourceType === "library" &&
+                        "Upload libraries or package artifacts to inspect."}
+                      {sourceType === "container" &&
+                        "Enter the Docker or OCI image reference to inspect."}
+                    </p>
+                  </div>
+
+                  {sourceType === "repository" && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Organization Name <span className="text-destructive">*</span></label>
-                      <Input value={orgName} onChange={e => setOrgName(e.target.value)} placeholder="mypay Software Pvt. Ltd." />
+                      <label className="text-sm font-medium">
+                        GitHub / Git Repository URL
+                      </label>
+
+                      <Input
+                        type="url"
+                        value={repoUrl}
+                        onChange={(e) => setRepoUrl(e.target.value)}
+                        placeholder="https://github.com/owner/repository"
+                        className="w-full"
+                      />
+
+                      <p className="text-xs text-muted-foreground">
+                        Use a repository URL you are authorized to access.
+                        Private repositories may require authentication.
+                      </p>
                     </div>
+                  )}
+
+                  {sourceType === "zip" && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Primary Domain <span className="text-destructive">*</span></label>
-                      <div className="relative">
-                        <Globe className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input className="pl-9" value={domain} onChange={e => setDomain(e.target.value)} placeholder="mypay.com" />
-                      </div>
+                      <label className="text-sm font-medium">
+                        Upload Source Code ZIP
+                      </label>
+
+                      <Input
+                        type="file"
+                        accept=".zip,application/zip"
+                        onChange={(e) =>
+                          setSourceFiles(Array.from(e.target.files ?? []))
+                        }
+                        className="w-full cursor-pointer"
+                      />
+
+                      {sourceFiles.length > 0 && (
+                        <p className="break-all text-xs text-primary">
+                          Selected: {sourceFiles.map((file) => file.name).join(", ")}
+                        </p>
+                      )}
                     </div>
+                  )}
+
+                  {sourceType === "binary" && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">GitHub Repository URL</label>
-                      <div className="relative">
-                        <Code className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input className="pl-9" value={repoUrl} onChange={e => setRepoUrl(e.target.value)} placeholder="https://github.com/mypay/mypay-payment-gateway" />
-                      </div>
+                      <label className="text-sm font-medium">
+                        Upload Binary Artifacts
+                      </label>
+
+                      <Input
+                        type="file"
+                        multiple
+                        accept=".bin,.exe,.elf,.out,.wasm"
+                        onChange={(e) =>
+                          setSourceFiles(Array.from(e.target.files ?? []))
+                        }
+                        className="w-full cursor-pointer"
+                      />
+
+                      {sourceFiles.length > 0 && (
+                        <p className="text-xs text-primary">
+                          {sourceFiles.length} file(s) selected
+                        </p>
+                      )}
                     </div>
+                  )}
+
+                  {sourceType === "library" && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Industry</label>
-                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={industry} onChange={e => setIndustry(e.target.value)}>
-                        <option value="">Select Industry</option>
-                        <option value="financial">Financial Services</option>
-                        <option value="healthcare">Healthcare</option>
-                        <option value="technology">Technology</option>
-                        <option value="government">Government / Defense</option>
-                        <option value="retail">Retail / E-Commerce</option>
-                      </select>
+                      <label className="text-sm font-medium">
+                        Upload Libraries / Packages
+                      </label>
+
+                      <Input
+                        type="file"
+                        multiple
+                        accept=".jar,.war,.aar,.dll,.so,.dylib,.a,.whl,.tgz,.tar.gz"
+                        onChange={(e) =>
+                          setSourceFiles(Array.from(e.target.files ?? []))
+                        }
+                        className="w-full cursor-pointer"
+                      />
+
+                      {sourceFiles.length > 0 && (
+                        <p className="text-xs text-primary">
+                          {sourceFiles.length} file(s) selected
+                        </p>
+                      )}
                     </div>
-                    
-                    <div className="space-y-4 md:col-span-2 pt-4">
-                      <div className="flex justify-between">
-                        <label className="text-sm font-medium">Data Shelf Life (Years)</label>
-                        <span className="text-sm font-mono font-bold text-primary">{shelfLife[0]} Years</span>
-                      </div>
-                      <Slider value={shelfLife} onValueChange={setShelfLife} max={30} min={1} step={1} />
-                      <p className="text-xs text-muted-foreground">How long must the data processed by this organization remain secure against quantum decryption?</p>
+                  )}
+
+                  {sourceType === "container" && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Container Image Reference
+                      </label>
+
+                      <Input
+                        value={containerImage}
+                        onChange={(e) => setContainerImage(e.target.value)}
+                        placeholder="nginx:1.27 or registry.example.com/team/app:tag"
+                        className="w-full"
+                      />
+
+                      <p className="text-xs text-muted-foreground">
+                        Private registries may require registry credentials.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Risk assessment parameters */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="min-w-0 space-y-4 rounded-xl border border-border/70 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="text-sm font-medium">
+                        Data Shelf Life (Years)
+                      </label>
+
+                      <span className="shrink-0 font-mono text-sm font-semibold text-primary">
+                        {shelfLife[0]} Years
+                      </span>
                     </div>
 
-                    <div className="space-y-2 md:col-span-2 pt-2">
-                      <label className="text-sm font-medium">Business Criticality</label>
-                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={criticality} onChange={e => setCriticality(e.target.value)}>
-                        <option value="low">Low (Internal tools, non-sensitive)</option>
-                        <option value="medium">Medium (Standard business apps)</option>
-                        <option value="high">High (Customer data, PII)</option>
-                        <option value="critical">Critical (Financial data, PHI, Core IP)</option>
-                      </select>
-                    </div>
+                    <Slider
+                      value={shelfLife}
+                      onValueChange={setShelfLife}
+                      max={30}
+                      min={1}
+                      step={1}
+                    />
+
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      How long must this data remain confidential? Longer-lived
+                      sensitive data may require earlier migration planning.
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+
+                  <div className="min-w-0 space-y-3 rounded-xl border border-border/70 p-4">
+                    <label className="text-sm font-medium">
+                      Business Criticality
+                    </label>
+
+                    <select
+                      className="flex h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={criticality}
+                      onChange={(e) => setCriticality(e.target.value)}
+                    >
+                      <option value="low">
+                        Low — Internal tools, non-sensitive
+                      </option>
+                      <option value="medium">
+                        Medium — Standard business applications
+                      </option>
+                      <option value="high">
+                        High — Customer data, PII
+                      </option>
+                      <option value="critical">
+                        Critical — Financial data, PHI, core IP
+                      </option>
+                    </select>
+
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Used as business context when prioritizing cryptographic
+                      migration and remediation.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
           {/* STEP 2: ASSET DISCOVERY SCOPE */}
           {step === 2 && (
