@@ -916,14 +916,14 @@ export default function Page() {
 
               <div className="mt-7 grid grid-cols-3 gap-2">
                 <div className="rounded-xl border bg-card/50 p-3 text-center">
-                  <p className="text-lg font-bold">15 yrs</p>
+                  <p className="text-lg font-bold">12 yrs</p>
                   <p className="text-[9px] text-muted-foreground">
                     Shelf life
                   </p>
                 </div>
 
                 <div className="rounded-xl border bg-card/50 p-3 text-center">
-                  <p className="text-lg font-bold">+</p>
+                  <p className="text-lg font-bold">3 yrs</p>
                   <p className="text-[9px] text-muted-foreground">
                     Migration
                   </p>
@@ -931,7 +931,7 @@ export default function Page() {
 
                 <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] p-3 text-center">
                   <p className="text-lg font-bold text-red-500">
-                    18 yrs
+                    15 yrs
                   </p>
                   <p className="text-[9px] text-muted-foreground">
                     Combined horizon
@@ -945,15 +945,11 @@ export default function Page() {
 
                   <div>
                     <p className="text-xs font-semibold">
-                      OSCA timing exposure
+                      MOSCA timing exposure
                     </p>
 
                     <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
-                      The combined migration and data-value horizon is
-                      approximately 18 years versus the illustrative
-                      projected CRQC arrival window of approximately 8
-                      years. This creates a substantial timing gap that
-                      should inform migration prioritization.
+                      The 15-year combined data-lifetime and migration horizon exceeds the assumed 8-year quantum-threat horizon. Migration planning should account for this timing gap.
                     </p>
                   </div>
                 </div>
