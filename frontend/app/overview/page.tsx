@@ -59,6 +59,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 
 import { useGlobalData } from "@/app/context/GlobalDataContext"
+import { DEMO_CRYPTO_ASSET_COUNT } from "@/lib/demo-metrics"
 
 /* =========================================================
    CBOM-DERIVED DATA
@@ -342,7 +343,7 @@ export default function Page() {
 
   const scan = data.scan
 
-  const totalAssets = scan?.assetCount ?? 22
+  const totalAssets = scan?.assetCount ?? DEMO_CRYPTO_ASSET_COUNT
 
   const quantumReady = 42
   const riskScore = 78

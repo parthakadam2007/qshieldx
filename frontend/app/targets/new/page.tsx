@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { DEMO_CRYPTO_ASSET_COUNT } from "@/lib/demo-metrics"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -850,7 +851,7 @@ const [businessCriticality, setBusinessCriticality] =
                       <div className="p-2 rounded-full bg-primary/10 text-primary"><Server className="size-4" /></div>
                       <div>
                         <div className="text-xs text-muted-foreground">Est. Target Assets</div>
-                        <div className="text-sm font-semibold">148</div>
+                        <div className="text-sm font-semibold">{DEMO_CRYPTO_ASSET_COUNT}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">

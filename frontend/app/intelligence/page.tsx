@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { DEMO_CRYPTO_ASSET_COUNT } from "@/lib/demo-metrics"
 
 import {
   Activity,
@@ -152,7 +153,7 @@ const TIMELINE_EVENTS = [
     payload: {
       mode: "Hybrid Discovery",
       domain: "mypay.com",
-      assets_expected: 148,
+      assets_expected: DEMO_CRYPTO_ASSET_COUNT,
     },
   },
 
@@ -293,7 +294,7 @@ const MOCK_LOGS = [
   "[19:42] CRYPTOFINDER: Discovered crypto libraries.",
   "[19:42] GITLEAKS: Detected exposed AWS Access Key.",
   "[19:43] SEMGREP: Detected SHA-1 implementation.",
-  "[19:43] CORRELATION: Merged evidence for 148 assets.",
+  `[19:43] CORRELATION: Merged evidence for ${DEMO_CRYPTO_ASSET_COUNT} assets.`,
   "[19:43] CBOM: Generated CycloneDX 1.7.",
   "[19:43] QARS: Calculated score 91.",
   "[19:43] MIGRATION: Generated Wave 1 roadmap.",
@@ -314,7 +315,7 @@ const DISCOVERY_DATA = [
   { time: "19:44", assets: 91, findings: 24 },
   { time: "19:45", assets: 112, findings: 31 },
   { time: "19:46", assets: 128, findings: 38 },
-  { time: "19:47", assets: 148, findings: 46 },
+  { time: "19:47", assets: DEMO_CRYPTO_ASSET_COUNT, findings: 46 },
 ]
 
 
@@ -497,7 +498,7 @@ export default function IntelligencePage() {
 
   const [pulse, setPulse] = React.useState(0)
 
-  const [liveAssets, setLiveAssets] = React.useState(148)
+  const [liveAssets, setLiveAssets] = React.useState(DEMO_CRYPTO_ASSET_COUNT)
 
   const [activeAgents, setActiveAgents] =
     React.useState(1)
@@ -511,10 +512,10 @@ export default function IntelligencePage() {
       setPulse((p) => p + 1)
 
       setLiveAssets((current) => {
-        if (current >= 148) return 148
+        if (current >= DEMO_CRYPTO_ASSET_COUNT) return DEMO_CRYPTO_ASSET_COUNT
 
         return Math.min(
-          148,
+          DEMO_CRYPTO_ASSET_COUNT,
           current + Math.floor(Math.random() * 3)
         )
       })

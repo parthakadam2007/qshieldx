@@ -60,6 +60,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { DEMO_CRYPTO_ASSET_COUNT } from "@/lib/demo-metrics"
 // import { useUser } from "@/hooks/useUser"
 // import { createClient } from "@/lib/supabase"
 
@@ -95,7 +96,7 @@ const initialProjects: ProjectItem[] = [
     createdAt: "2026-08-28",
     isCurrentApp: true,
     quantumReadyPercent: 58.8,
-    assetCount: 148,
+    assetCount: DEMO_CRYPTO_ASSET_COUNT,
   },
   {
     id: "proj-3",
