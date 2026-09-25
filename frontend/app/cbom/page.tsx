@@ -166,11 +166,14 @@ function normalizeFilterValue(
  */
  function formatReportDate(value: unknown): string {
   if (!value) {
+    return "Date unavailable"
+  }
+
+  const raw = String(value).trim()
     return "Date unavailable";
   }
 
-
-  const raw = String(value).trim()
+  const raw = String(value).trim();
 
   // Handle ISO dates and standard date strings.
   const parsed = new Date(raw);
@@ -182,7 +185,6 @@ function normalizeFilterValue(
       year: "numeric",
     });
   }
-
 
   // Handle demo timestamps such as:
   // "31 Aug 2026 · 07:42 PM IST"
