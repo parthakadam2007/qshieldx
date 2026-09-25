@@ -164,43 +164,35 @@ function normalizeFilterValue(
  * - demo strings such as:
  *   "31 Aug 2026 · 07:42 PM IST"
  */
- function formatReportDate(value: unknown): string {
+function formatReportDate(value: unknown): string {
   if (!value) {
     return "Date unavailable"
   }
 
   const raw = String(value).trim()
-    return "Date unavailable";
-  }
-
-  const raw = String(value).trim();
-
-  // Handle ISO dates and standard date strings.
-  const parsed = new Date(raw);
+  const parsed = new Date(raw)
 
   if (!Number.isNaN(parsed.getTime())) {
     return parsed.toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
-    });
+    })
   }
 
-  // Handle demo timestamps such as:
-  // "31 Aug 2026 · 07:42 PM IST"
   const humanDateMatch = raw.match(
     /^(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/
-  );
+  )
 
   if (humanDateMatch?.[1]) {
-    return humanDateMatch[1];
+    return humanDateMatch[1]
   }
 
   if (raw.includes("·")) {
-    return raw.split("·")[0].trim();
+    return raw.split("·")[0].trim()
   }
 
-  return raw;
+  return raw
 }
 
 /*
