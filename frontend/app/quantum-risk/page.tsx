@@ -375,57 +375,97 @@ export default function QuantumRiskPage() {
   /* ------------------------------------------------------------------------ */
 
   const recommendationRecords = React.useMemo(() => {
-    return algorithms.map((algorithm, index) => {
-      const usedBy = algorithm.used_by || ""
+  return algorithms.map((algorithm, index) => {
+    const usedBy = algorithm.used_by || "";
 
-      const matchedRisk = quantumRisk.find((risk) => {
-        if (!risk.asset || !usedBy) return false
+    // Match the algorithm to an existing risk record.
+    const matchedRisk = quantumRisk.find((risk) => {
+      if (!risk.asset) return false;
 
-        return (
-          risk.asset.toLowerCase().includes(
-            usedBy.toLowerCase()
-          ) ||
-          usedBy.toLowerCase().includes(
-            risk.asset.toLowerCase()
-          )
-        )
-      })
+      const assetName = risk.asset.toLowerCase();
+      const usage = usedBy.toLowerCase();
+      const algorithmName = (algorithm.name || "").toLowerCase();
 
-      const recommendation = getPqcRecommendation(
+      return (
+        (usage && (
+          assetName.includes(usage) ||
+          usage.includes(assetName)
+        )) ||
+        (algorithmName && (
+          assetName.includes(algorithmName) ||
+          algorithmName.includes(assetName)
+        ))
+      );
+    });
+
+    const recommendation = getPqcRecommendation(
+      algorithm.name,
+      algorithm.pqc_recommendation
+    );
+
+    const risk = normalizeRisk(
+      algorithm.quantum_vulnerability
+    );
+
+    // Demo fallbacks: used only when no matching risk record exists.
+    // These are estimates, not measured QARS results.
+    const fallbackQars =
+      risk === "High" ? 85 :
+      risk === "Medium" ? 60 :
+      25;
+
+    const fallbackPriority =
+      risk === "High" ? "Immediate" :
+      risk === "Medium" ? "Wave 1" :
+      "Planned";
+
+    const fallbackWindow =
+      risk === "High" ? "0–6 months" :
+      risk === "Medium" ? "6–12 months" :
+      "12–24 months";
+
+    return {
+      id: `${algorithm.name || "algorithm"}-${index}`,
+
+      algorithm: algorithm.name || "Unknown algorithm",
+      keySize: algorithm.key_size || "Not specified",
+      usedBy: usedBy || "General cryptographic usage",
+
+      vulnerability:
+        algorithm.quantum_vulnerability ||
+        "Requires cryptographic review",
+
+      recommendation,
+
+      approach: getMigrationApproach(
         algorithm.name,
-        algorithm.pqc_recommendation
-      )
+        recommendation
+      ),
 
-      return {
-        id: `${algorithm.name || "algorithm"}-${index}`,
-        algorithm: algorithm.name || "Unknown algorithm",
-        keySize: algorithm.key_size || "Not available",
-        usedBy: usedBy || "Not available",
-        vulnerability:
-          algorithm.quantum_vulnerability ||
-          "Not available",
-        recommendation,
-        approach: getMigrationApproach(
-          algorithm.name,
-          recommendation
-        ),
-        reason: getRecommendationReason(
-          algorithm.name,
-          recommendation
-        ),
-        risk: normalizeRisk(
-          algorithm.quantum_vulnerability
-        ),
-        qars: matchedRisk?.qars,
-        priority: matchedRisk?.migrationPriority,
-        window: matchedRisk?.migrationWindow,
-        steps: getMigrationSteps(
-          algorithm.name,
-          recommendation
-        ),
-      }
-    })
-  }, [algorithms, quantumRisk])
+      reason: getRecommendationReason(
+        algorithm.name,
+        recommendation
+      ),
+
+      risk,
+
+      qars: matchedRisk?.qars ?? fallbackQars,
+
+      priority:
+        matchedRisk?.migrationPriority ?? fallbackPriority,
+
+      window:
+        matchedRisk?.migrationWindow ?? fallbackWindow,
+
+      steps: getMigrationSteps(
+        algorithm.name,
+        recommendation
+      ),
+
+      isEstimated: !matchedRisk,
+    };
+  });
+}, [algorithms, quantumRisk]);
 
   /* ------------------------------------------------------------------------ */
   /* Asset-specific recommendations                                            */
@@ -1689,6 +1729,7 @@ type RecommendationRecord = {
   priority?: string
   window?: string
   steps: string[]
+  isEstimated?: boolean;
 }
 
 function RecommendationCard({
@@ -1829,11 +1870,9 @@ function RecommendationCard({
 
                 <DetailRow
                   label="QARS"
-                  value={
-                    recommendation.qars !== undefined
-                      ? String(recommendation.qars)
-                      : "Not available"
-                  }
+                  value={`${recommendation.qars}/100${
+                    recommendation.isEstimated ? " (Estimated)" : ""
+                  }`}
                 />
 
               </div>
