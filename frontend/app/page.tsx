@@ -47,39 +47,81 @@ const stagger = {
 const features = [
   {
     icon: ScanSearch,
-    title: "Cryptographic Discovery",
+    title: "Input & Discovery",
     description:
-      "Discover cryptographic assets, certificates, algorithms, libraries, endpoints, and crypto dependencies across enterprise environments.",
-  },
-  {
-    icon: Database,
-    title: "CBOM Generation",
-    description:
-      "Build a structured Cryptography Bill of Materials that maps cryptographic usage to applications, services, and infrastructure.",
+      "Scan GitHub repositories, commits, ZIP and container artifacts, and live domains to discover cryptographic assets across the enterprise.",
   },
   {
     icon: Radar,
-    title: "Quantum Risk Analysis",
+    title: "8-Tier Hybrid Discovery",
     description:
-      "Analyze cryptographic exposure and identify assets that require migration planning for the post-quantum era.",
+      "Combine AST parsing, dependency analysis, binary and container inspection, HSM/KMS discovery, identity audits, eBPF runtime tracing, and SSRF-defended OSINT probing.",
+  },
+  {
+    icon: Cpu,
+    title: "AI Evidence Fusion",
+    description:
+      "LangGraph agents correlate and normalize evidence, manage contradictions, score confidence, suppress false positives, and reach a sovereign consensus without moving sensitive code off-premises.",
+  },
+  {
+    icon: Database,
+    title: "CycloneDX 1.7 CBOM",
+    description:
+      "Generate a standardized cryptographic inventory with algorithms, libraries, keys, certificates, dependencies, vulnerability metadata, and discovery provenance.",
   },
   {
     icon: Network,
-    title: "Dependency Mapping",
+    title: "Neo4j Crypto Digital Twin",
     description:
-      "Visualize relationships between applications, services, certificates, keys, algorithms, and cryptographic libraries.",
+      "Map applications, services, APIs, libraries, algorithms, certificates, data, infrastructure, and external dependencies to analyze blast radius, centrality, attack paths, and quantum-risk propagation.",
+  },
+  {
+    icon: Radar,
+    title: "Mosca Risk & HNDL",
+    description:
+      "Use data shelf life, migration time, and threat horizon to identify immediate risk where D + T exceeds Q, including Harvest Now, Decrypt Later exposure.",
   },
   {
     icon: ShieldCheck,
-    title: "PQC Readiness",
+    title: "Cryptographic Health Score",
     description:
-      "Track migration readiness and organize remediation work around vulnerable or long-lived cryptographic assets.",
+      "Calculate a 0–100 SecOps health score from algorithm weakness, severity, graph centrality, blast radius, temporal urgency, and asset criticality.",
+  },
+  {
+    icon: Fingerprint,
+    title: "7D Crypto Agility",
+    description:
+      "Measure migration complexity across API coupling, dependency depth, performance, hardware constraints, backward compatibility, FIPS compliance, and refactoring effort.",
+  },
+  {
+    icon: KeyRound,
+    title: "NIST PQC Mapping",
+    description:
+      "Map vulnerable algorithms to FIPS 203 ML-KEM, FIPS 204 ML-DSA, and FIPS 205 SLH-DSA with hybrid, compatibility-aware migration priorities.",
   },
   {
     icon: Terminal,
-    title: "Security Automation",
+    title: "Automated Remediation",
     description:
-      "Connect discovery, analysis, reporting, and remediation workflows through an automation-first security platform.",
+      "Move from vulnerable crypto to a PQC recommendation, code and configuration changes, validation, and GitHub or GitLab auto-PR delivery.",
+  },
+  {
+    icon: LockKeyhole,
+    title: "Customer-First Prioritization",
+    description:
+      "Prioritize remediation using customer exposure, sensitive data, business criticality, blast radius, quantum vulnerability, migration difficulty, and HNDL risk.",
+  },
+  {
+    icon: Shield,
+    title: "CI/CD Crypto Security Gate",
+    description:
+      "Generate SARIF 2.1.0 findings for GitHub, GitLab, and CI/CD pipelines, then block builds when new cryptographic violations are introduced.",
+  },
+  {
+    icon: Eye,
+    title: "Actionable Security Dashboards",
+    description:
+      "Expose health, risk trends, critical assets, AI evidence, CBOM inventory, Digital Twin paths, PQC migration, remediation, and compliance status in one workflow.",
   },
 ]
 const workflow = [
@@ -92,31 +134,60 @@ const workflow = [
   {
     number: "02",
     icon: Fingerprint,
-    title: "Inventory",
-    text: "Normalize assets into a centralized cryptographic inventory.",
+    title: "Verify",
+    text: "Normalize, deduplicate, enrich, and fuse evidence with confidence and contradiction management.",
   },
   {
     number: "03",
-    icon: Radar,
-    title: "Assess",
-    text: "Evaluate algorithms, dependencies, exposure, and quantum risk.",
+    icon: Network,
+    title: "Map",
+    text: "Generate a CycloneDX CBOM and connect the ecosystem in the Neo4j Crypto Digital Twin.",
   },
   {
     number: "04",
+    icon: Radar,
+    title: "Quantify",
+    text: "Calculate blast radius, Mosca/HNDL risk, health score, and cryptographic agility.",
+  },
+  {
+    number: "05",
+    icon: Fingerprint,
+    title: "Prioritize",
+    text: "Rank customer-facing, sensitive, critical, and difficult-to-migrate assets first.",
+  },
+  {
+    number: "06",
+    icon: KeyRound,
+    title: "Migrate",
+    text: "Map legacy algorithms to NIST PQC alternatives and generate compatibility-aware fixes.",
+  },
+  {
+    number: "07",
+    icon: Terminal,
+    title: "Remediate",
+    text: "Validate code, configuration, and dependency changes before opening an auto-PR.",
+  },
+  {
+    number: "08",
     icon: ShieldCheck,
-    title: "Prepare",
-    text: "Prioritize migration work and build a path toward PQC readiness.",
+    title: "Enforce",
+    text: "Publish SARIF findings and block new cryptographic risk in GitHub, GitLab, and CI/CD.",
   },
 ]
 const capabilities = [
-  "TLS endpoint discovery",
-  "Certificate inventory",
-  "Algorithm identification",
-  "Key and certificate mapping",
-  "Cryptographic dependency analysis",
-  "CBOM generation",
-  "Quantum risk classification",
-  "PQC migration tracking",
+  "GitHub repository and commit scanning",
+  "ZIP, Docker, and OCI artifact inspection",
+  "Live domain TLS, certificate, and cipher discovery",
+  "Source AST and dependency/SCA analysis",
+  "Binary, HSM/KMS, identity, and eBPF runtime discovery",
+  "SSRF-defended OSINT probing",
+  "LangGraph multi-agent evidence routing",
+  "False-positive suppression and confidence scoring",
+  "CycloneDX 1.7 CBOM export",
+  "Neo4j graph traversal and blast-radius analysis",
+  "Mosca model and HNDL detection",
+  "7D agility and NIST PQC mapping",
+  "Auto-remediation, auto-PR, SARIF, and CI/CD gates",
 ]
 const securityItems = [
   {
