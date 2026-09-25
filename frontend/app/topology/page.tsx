@@ -19,7 +19,6 @@ import {
   Node,
 } from "@xyflow/react"
 
-// @ts-expect-error The package provides the stylesheet at runtime but does not expose a TypeScript declaration for it.
 import "@xyflow/react/dist/style.css"
 import Link from "next/link"
 import { Server, Globe, Lock, Unlock, Database, Activity, ScanLine, ArrowRight } from "lucide-react"

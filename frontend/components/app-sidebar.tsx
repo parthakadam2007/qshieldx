@@ -13,6 +13,7 @@ import {
   Settings2,
   SquareTerminal,
   Network,
+  Waypoints,
   Target,
   Shield,
   User,
@@ -71,6 +72,11 @@ const navData = {
       title: "Crypto Review",
       url: "/crypto-review",
       icon: Lock,
+    },
+    {
+      title: "Crypto Digital Twin",
+      url: "/crypto-digital-twin",
+      icon: Waypoints,
     },
     {
       title: "Settings",
