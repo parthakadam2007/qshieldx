@@ -826,7 +826,7 @@ export default function Page() {
                 <div>
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Sparkles className="size-4 text-purple-500" />
-                    OSCA's Theorem Timeline
+                    MOSCA's Theorem Timeline
                   </CardTitle>
 
                   <CardDescription className="text-xs">
