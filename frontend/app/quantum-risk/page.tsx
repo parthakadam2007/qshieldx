@@ -58,11 +58,19 @@ type Asset = {
   algorithm?: string
   business_criticality?: string
   lifetime_years?: number
+  migration_time_years?: number
   quantum_status?: string
   owner_team?: string
   cloud_provider?: string
   tags?: string[]
 }
+type Criticality = "Critical" | "High" | "Medium" | "Unclassified"
+
+type RiskTier =
+  | "Classic — Critical"
+  | "Quantum-Prone"
+  | "Grover-Targeted"
+  | "Safe — PQC"
 
 type QuantumRisk = {
   asset?: string
@@ -84,6 +92,61 @@ type Algorithm = {
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
+
+
+function classifyQuantumTier(
+  asset: Asset,
+  zThreat: number,
+  defaultD: number,
+  defaultT: number
+): RiskTier | null {
+  const value = [
+    asset.algorithm,
+    asset.name,
+    asset.asset_type,
+    asset.artifact_type,
+    asset.quantum_status,
+    ...(asset.tags || []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+
+  // Recognized post-quantum algorithms
+  if (
+    /ml-kem|ml-dsa|slh-dsa|kyber|dilithium|sphincs|post.?quantum|pqc/.test(
+      value
+    )
+  ) {
+    return "Safe — PQC"
+  }
+
+  // Symmetric and hash algorithms needing quantum review
+  if (
+    /aes-128|3des|des\b|sha-1|sha-256|sha-384|sha-512|md5/.test(
+      value
+    )
+  ) {
+    return "Grover-Targeted"
+  }
+
+  // Public-key algorithms vulnerable to Shor's algorithm
+  if (
+    /\brsa\b|\becc\b|ecdsa|ecdh|\bdh\b|\bdsa\b|x25519|ed25519/.test(
+      value
+    )
+  ) {
+    const D = asset.lifetime_years ?? defaultD
+    const T = asset.migration_time_years ?? defaultT
+
+    return D + T > zThreat
+      ? "Classic — Critical"
+      : "Quantum-Prone"
+  }
+
+  // Do not invent a classification when the algorithm is unknown.
+  return null
+}
 
 function normalizeRisk(status?: string): RiskLevel {
   const value = String(status || "").toLowerCase()
@@ -107,7 +170,7 @@ function normalizeRisk(status?: string): RiskLevel {
   return "Low"
 }
 
-function normalizeCriticality(value?: string) {
+function normalizeCriticality(value?: string): Criticality {
   const normalized = String(value || "").toLowerCase()
 
   if (normalized === "critical") return "Critical"
@@ -262,53 +325,101 @@ export default function QuantumRiskPage() {
   const algorithms = (data?.algorithms || []) as Algorithm[]
 
   /* ------------------------------------------------------------------------ */
+  /* Mosca scenario state                                                     */
+  /* ------------------------------------------------------------------------ */
+
+  const [moscaPreset, setMoscaPreset] =
+    React.useState("NIST Baseline")
+
+  const [xLifetime, setXLifetime] =
+    React.useState(12)
+
+  const [yMigration, setYMigration] =
+    React.useState(3)
+
+  const [zThreat, setZThreat] =
+    React.useState(8)
+
+  // Keep tab navigation controllable so the Risk Matrix can open the full
+  // Mosca Timeline / migration controls.
+  const [activeTab, setActiveTab] = React.useState("matrix")
+
+  /* ------------------------------------------------------------------------ */
   /* Risk Matrix                                                              */
   /* ------------------------------------------------------------------------ */
 
   const riskMatrix = React.useMemo(() => {
-    const matrix = {
-      Critical: {
-        Low: 0,
-        Medium: 0,
-        High: 0,
-      },
-      High: {
-        Low: 0,
-        Medium: 0,
-        High: 0,
-      },
-      Medium: {
-        Low: 0,
-        Medium: 0,
-        High: 0,
-      },
-      Unclassified: {
-        Low: 0,
-        Medium: 0,
-        High: 0,
-      },
+  const tiers: RiskTier[] = [
+    "Classic — Critical",
+    "Quantum-Prone",
+    "Grover-Targeted",
+    "Safe — PQC",
+  ]
+
+  const criticalities: Criticality[] = [
+    "Critical",
+    "High",
+    "Medium",
+    "Unclassified",
+  ]
+
+  const matrix = Object.fromEntries(
+    criticalities.map((criticality) => [
+      criticality,
+      Object.fromEntries(
+        tiers.map((tier) => [tier, 0])
+      ),
+    ])
+  ) as Record<Criticality, Record<RiskTier, number>>
+
+  let unassessed = 0
+
+  assets.forEach((asset) => {
+    const criticality = normalizeCriticality(
+      asset.business_criticality
+    )
+
+    const tier = classifyQuantumTier(
+      asset,
+      zThreat,
+      xLifetime,
+      yMigration
+    )
+
+    if (!tier) {
+      unassessed++
+      return
     }
 
-    assets.forEach((asset) => {
-      const criticality = normalizeCriticality(
-        asset.business_criticality
-      )
+    matrix[criticality][tier]++
+  })
 
-      const risk = riskFromQuantumStatus(
-        asset.quantum_status
-      )
+  return { matrix, unassessed, tiers }
+}, [assets, xLifetime, yMigration, zThreat])
 
-      matrix[criticality][risk]++
-    })
-
-    return matrix
-  }, [assets])
-
-  const matrixTotal = Object.values(riskMatrix).reduce(
-    (total, row) =>
-      total + row.Low + row.Medium + row.High,
-    0
+  const classifiedTotal = React.useMemo(
+    () =>
+      Object.values(riskMatrix.matrix).reduce(
+        (total, row) =>
+          total + Object.values(row).reduce((rowTotal, count) => rowTotal + count, 0),
+        0
+      ),
+    [riskMatrix.matrix]
   )
+
+  const matrixTotal = classifiedTotal + riskMatrix.unassessed
+
+  const tierCounts = React.useMemo(() => {
+    return Object.fromEntries(
+      riskMatrix.tiers.map((tier) => [
+        tier,
+        Object.values(riskMatrix.matrix).reduce(
+          (total, row) => total + row[tier],
+          0
+        ),
+      ])
+    ) as Record<RiskTier, number>
+  }, [riskMatrix])
 
   /* ------------------------------------------------------------------------ */
   /* Risk lookup                                                              */
@@ -329,18 +440,6 @@ export default function QuantumRiskPage() {
   /* ------------------------------------------------------------------------ */
   /* Mosca scenario                                                           */
   /* ------------------------------------------------------------------------ */
-
-  const [moscaPreset, setMoscaPreset] =
-    React.useState("NIST Baseline")
-
-  const [xLifetime, setXLifetime] =
-    React.useState(12)
-
-  const [yMigration, setYMigration] =
-    React.useState(3)
-
-  const [zThreat, setZThreat] =
-    React.useState(8)
 
   function setPreset(preset: string) {
     setMoscaPreset(preset)
@@ -481,6 +580,17 @@ export default function QuantumRiskPage() {
       )
   }, [quantumRisk])
 
+  const priorityRecords = React.useMemo(
+    () =>
+      [...recommendationRecords]
+        .sort((a, b) => Number(b.qars || 0) - Number(a.qars || 0))
+        .slice(0, 5),
+    [recommendationRecords]
+  )
+
+  const publicKeyExposureCount =
+    tierCounts["Classic — Critical"] + tierCounts["Quantum-Prone"]
+
   /* ------------------------------------------------------------------------ */
   /* Loading                                                                  */
   /* ------------------------------------------------------------------------ */
@@ -525,7 +635,8 @@ export default function QuantumRiskPage() {
       {/* ------------------------------------------------------------------ */}
 
       <Tabs
-        defaultValue="matrix"
+        value={activeTab}
+        onValueChange={setActiveTab}
         className="w-full"
       >
 
@@ -558,203 +669,200 @@ export default function QuantumRiskPage() {
           className="space-y-4"
         >
 
+          {/* Mosca controls are also available directly above the matrix. */}
+          <Card className="border-primary/20 bg-background/70">
+            <CardHeader className="pb-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-primary/10 p-3">
+                    <Timer className="size-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">
+                      Quantum Arrival Estimate (Z) &amp; Mosca Engine Controls
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Adjust the quantum-threat horizon. The four-tier risk matrix updates using the selected X + Y versus Z scenario.
+                    </CardDescription>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("timeline")}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-primary/30 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+                >
+                  <ChevronDown className="size-4 -rotate-90" />
+                  Edit Migration (Y) Table
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-4 sm:p-5">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <label htmlFor="matrix-z-threat" className="text-sm font-medium">
+                    CRQC Quantum Threat Horizon (Z):{" "}
+                    <span className="font-semibold text-primary">{zThreat}</span>{" "}
+                    Years
+                  </label>
+                  <span className="text-xs text-muted-foreground">Range: 1–30 Years</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <input
+                    id="matrix-z-threat"
+                    type="range"
+                    min={1}
+                    max={30}
+                    step={1}
+                    value={zThreat}
+                    onChange={(event) => {
+                      setMoscaPreset("Custom")
+                      setZThreat(Number(event.target.value))
+                    }}
+                    className="h-2 w-full cursor-pointer accent-primary"
+                    aria-label="Quantum threat horizon in years"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={zThreat}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value)
+                      if (Number.isFinite(nextValue)) {
+                        setMoscaPreset("Custom")
+                        setZThreat(Math.min(30, Math.max(1, nextValue)))
+                      }
+                    }}
+                    className="w-20 rounded-md border bg-background px-3 py-2 text-center text-sm"
+                    aria-label="Quantum threat horizon value"
+                  />
+                </div>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    Current Mosca scenario: <strong className="text-foreground">{xLifetime} + {yMigration} {moscaExposure ? ">" : "≤"} {zThreat}</strong>
+                  </span>
+                  <span>
+                    {moscaExposure ? "Exposure condition triggered" : "Exposure condition not triggered"}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="bg-background/50 backdrop-blur">
 
-            <CardHeader>
-              <CardTitle>
-                Business Criticality × Quantum Risk
-              </CardTitle>
+            <CardTitle>
+              Business Criticality × 4-Tier Quantum Risk
+            </CardTitle>
 
-              <CardDescription>
-                Risk distribution across the complete discovered
-                asset inventory. Assets without a business-criticality
-                classification remain explicitly unclassified.
-              </CardDescription>
-            </CardHeader>
+            <CardDescription>
+              Every discovered asset is classified into one of four cryptographic tiers when its algorithm is recognized. Public-key tiering recalculates from the selected Mosca scenario (X + Y versus Z); unknown algorithms remain unassessed.
+            </CardDescription>
 
             <CardContent>
 
               <div className="overflow-x-auto">
-
-                <div className="min-w-[760px]">
-
-                  <div className="grid grid-cols-4 gap-2 text-center text-sm">
-
-                    {/* Header */}
-
-                    <div className="p-3 font-semibold border-b">
-                      Criticality \ Risk
+                <div className="min-w-[900px]">
+                  <div className="grid grid-cols-5 gap-2 text-center text-sm">
+                    <div className="flex items-center justify-center p-3 text-xs font-semibold text-muted-foreground">
+                      CRITICALITY ↓ / TIER →
                     </div>
 
-                    <div className="p-3 font-semibold border-b text-emerald-500">
-                      Low
-                    </div>
+                    {riskMatrix.tiers.map((tier) => (
+                      <div
+                        key={tier}
+                        className={`flex min-h-[64px] items-center justify-center rounded-md border p-3 font-semibold ${
+                          tier === "Classic — Critical"
+                            ? "border-destructive/30 text-destructive"
+                            : tier === "Quantum-Prone"
+                              ? "border-orange-500/30 text-orange-500"
+                              : tier === "Grover-Targeted"
+                                ? "border-amber-500/30 text-amber-500"
+                                : "border-emerald-500/30 text-emerald-500"
+                        }`}
+                      >
+                        {tier}
+                      </div>
+                    ))}
 
-                    <div className="p-3 font-semibold border-b text-amber-500">
-                      Medium
-                    </div>
+                    {(["Critical", "High", "Medium", "Unclassified"] as const).map(
+                      (criticality) => (
+                        <React.Fragment key={criticality}>
+                          <MatrixLabel label={criticality} />
+                          {riskMatrix.tiers.map((tier) => {
+                            const tone =
+                              tier === "Classic — Critical"
+                                ? "high"
+                                : tier === "Safe — PQC"
+                                  ? "low"
+                                  : "medium"
 
-                    <div className="p-3 font-semibold border-b text-destructive">
-                      High
-                    </div>
-
-                    {/* Critical */}
-
-                    <MatrixLabel label="Critical" />
-
-                    <MatrixCell
-                      value={riskMatrix.Critical.Low}
-                      tone="low"
-                    />
-
-                    <MatrixCell
-                      value={riskMatrix.Critical.Medium}
-                      tone="medium"
-                    />
-
-                    <MatrixCell
-                      value={riskMatrix.Critical.High}
-                      tone="high"
-                    />
-
-                    {/* High */}
-
-                    <MatrixLabel label="High" />
-
-                    <MatrixCell
-                      value={riskMatrix.High.Low}
-                      tone="low"
-                    />
-
-                    <MatrixCell
-                      value={riskMatrix.High.Medium}
-                      tone="medium"
-                    />
-
-                    <MatrixCell
-                      value={riskMatrix.High.High}
-                      tone="high"
-                    />
-
-                    {/* Medium */}
-
-                    <MatrixLabel label="Medium" />
-
-                    <MatrixCell
-                      value={riskMatrix.Medium.Low}
-                      tone="low"
-                    />
-
-                    <MatrixCell
-                      value={riskMatrix.Medium.Medium}
-                      tone="medium"
-                    />
-
-                    <MatrixCell
-                      value={riskMatrix.Medium.High}
-                      tone="high"
-                    />
-
-                    {/* Unclassified */}
-
-                    <MatrixLabel label="Unclassified" />
-
-                    <MatrixCell
-                      value={riskMatrix.Unclassified.Low}
-                      tone="low"
-                      highlight={
-                        riskMatrix.Unclassified.Low > 0
-                      }
-                    />
-
-                    <MatrixCell
-                      value={riskMatrix.Unclassified.Medium}
-                      tone="medium"
-                    />
-
-                    <MatrixCell
-                      value={riskMatrix.Unclassified.High}
-                      tone="high"
-                    />
-
+                            return (
+                              <MatrixCell
+                                key={`${criticality}-${tier}`}
+                                value={riskMatrix.matrix[criticality][tier]}
+                                tone={tone}
+                                highlight={
+                                  criticality === "Critical" &&
+                                  tier === "Classic — Critical" &&
+                                  riskMatrix.matrix[criticality][tier] > 0
+                                }
+                              />
+                            )
+                          })}
+                        </React.Fragment>
+                      )
+                    )}
                   </div>
-
                 </div>
-
               </div>
 
-              {/* Matrix explanation */}
-
-              <div className="mt-5 grid gap-3 md:grid-cols-3">
-
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <InfoCard
-                  icon={
-                    <ShieldCheck className="size-4 text-emerald-500" />
-                  }
-                  title="Low"
-                  text="Assets currently marked Quantum Ready in the inventory."
+                  icon={<ShieldAlert className="size-4 text-destructive" />}
+                  title="Classic — Critical"
+                  text="Shor-vulnerable public-key cryptography where X + Y exceeds the selected threat horizon Z."
                 />
-
                 <InfoCard
-                  icon={
-                    <AlertTriangle className="size-4 text-amber-500" />
-                  }
-                  title="Medium"
-                  text="Assets currently marked At Risk and requiring migration planning."
+                  icon={<AlertTriangle className="size-4 text-orange-500" />}
+                  title="Quantum-Prone"
+                  text="Shor-vulnerable public-key cryptography where the selected X + Y threshold does not exceed Z."
                 />
-
                 <InfoCard
-                  icon={
-                    <ShieldAlert className="size-4 text-destructive" />
-                  }
-                  title="High"
-                  text="Assets currently marked Vulnerable and requiring priority assessment."
+                  icon={<Target className="size-4 text-amber-500" />}
+                  title="Grover-Targeted"
+                  text="Recognized symmetric or hash algorithms that need quantum-strength review."
                 />
-
+                <InfoCard
+                  icon={<ShieldCheck className="size-4 text-emerald-500" />}
+                  title="Safe — PQC"
+                  text="Recognized post-quantum algorithms detected in the asset metadata."
+                />
               </div>
-
-              {/* Inventory accounting */}
 
               <div className="mt-5 rounded-lg border bg-muted/20 p-4">
-
-                <div className="flex items-center justify-between gap-4">
-
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-
-                    <p className="text-sm font-medium">
-                      Inventory accounting
-                    </p>
-
+                    <p className="text-sm font-medium">Inventory accounting</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Every asset in the current inventory is represented
-                      in this matrix.
+                      Classified assets appear in the four-tier grid. Assets without a recognized algorithm remain unassessed.
                     </p>
-
                   </div>
-
                   <Badge variant="outline">
-                    {matrixTotal} Assets
+                    {matrixTotal} / {assets.length} assets accounted for
                   </Badge>
+                </div>
 
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <Badge variant="secondary">Classified: {classifiedTotal}</Badge>
+                  <Badge variant="outline">Unassessed: {riskMatrix.unassessed}</Badge>
                 </div>
 
                 {matrixTotal !== assets.length && (
                   <p className="mt-3 text-xs text-amber-500">
-                    Matrix count does not match the current asset array.
-                    Review the source inventory before interpreting the
-                    distribution.
+                    The matrix accounting total differs from the source asset array. Check for duplicate or malformed inventory records.
                   </p>
                 )}
-
-                {riskMatrix.Unclassified.Low > 0 && (
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    {riskMatrix.Unclassified.Low} assets are currently
-                    unclassified for business criticality. QShieldX does
-                    not assign a criticality value that is absent from
-                    the source inventory.
-                  </p>
-                )}
-
               </div>
 
             </CardContent>
@@ -910,6 +1018,260 @@ export default function QuantumRiskPage() {
               </CardContent>
 
             </Card>
+
+          {/* Risk-matrix-linked assessment summary */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="bg-background/50 backdrop-blur">
+              <CardHeader className="pb-2">
+                <CardDescription>Classified Assets</CardDescription>
+                <CardTitle className="text-3xl">{classifiedTotal}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs text-muted-foreground">
+                Assets assigned to one of the four cryptographic tiers.
+              </CardContent>
+            </Card>
+            <Card className="bg-background/50 backdrop-blur">
+              <CardHeader className="pb-2">
+                <CardDescription>Shor-Vulnerable Tiers</CardDescription>
+                <CardTitle className="text-3xl text-destructive">{publicKeyExposureCount}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs text-muted-foreground">
+                Classic — Critical plus Quantum-Prone assets.
+              </CardContent>
+            </Card>
+            <Card className="bg-background/50 backdrop-blur">
+              <CardHeader className="pb-2">
+                <CardDescription>Grover-Targeted</CardDescription>
+                <CardTitle className="text-3xl text-amber-500">{tierCounts["Grover-Targeted"]}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs text-muted-foreground">
+                Symmetric or hash algorithms flagged for quantum-strength review.
+              </CardContent>
+            </Card>
+            <Card className="bg-background/50 backdrop-blur">
+              <CardHeader className="pb-2">
+                <CardDescription>Safe — PQC</CardDescription>
+                <CardTitle className="text-3xl text-emerald-500">{tierCounts["Safe — PQC"]}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs text-muted-foreground">
+                Assets whose metadata identifies a recognized PQC algorithm.
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+            <Card className="bg-background/50 backdrop-blur">
+              <CardHeader>
+                <CardTitle>Priority-Ranked Fix List (Mosca Theorem)</CardTitle>
+                <CardDescription>
+                  X, Y, and Z use the active Mosca scenario; urgency margin and tier are calculated from that scenario. QARS is shown only when recorded.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {priorityRecords.length === 0 ? (
+                  <EmptyState
+                    icon={<Target className="size-5" />}
+                    title="No recommendation records"
+                    text="The source does not currently contain algorithm records to display."
+                  />
+                ) : (
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="min-w-[250px]">Finding Name &amp; Location</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead className="text-center">X (Lifetime)</TableHead>
+                          <TableHead className="text-center">Y (Migration)</TableHead>
+                          <TableHead className="text-center">Z (Threat)</TableHead>
+                          <TableHead className="text-center">Urgency Margin</TableHead>
+                          <TableHead className="text-center">Urgency Tier</TableHead>
+                          <TableHead className="text-center">Business Criticality</TableHead>
+                          <TableHead className="text-center">QARS</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {priorityRecords.map((record) => {
+                          const finding = record as typeof record & {
+                            location?: string | null
+                            type?: string | null
+                            businessCriticality?: string | null
+                            priorityScore?: number | string | null
+                          }
+
+                          const normalize = (value?: string | null) =>
+                            String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+
+                          const algorithmName = normalize(record.algorithm)
+                          const usageName = normalize(record.usedBy)
+                          const matchedAsset = assets.find((asset) => {
+                            const assetName = normalize(asset.name)
+                            const assetAlgorithm = normalize(asset.algorithm)
+                            return Boolean(
+                              (assetAlgorithm && algorithmName && (
+                                assetAlgorithm.includes(algorithmName) || algorithmName.includes(assetAlgorithm)
+                              )) ||
+                              (assetName && usageName && (
+                                usageName.includes(assetName) || assetName.includes(usageName)
+                              ))
+                            )
+                          })
+
+                          // Prefer asset-specific values when present; otherwise use the active
+                          // scenario controls. These are real scenario inputs, not placeholder text.
+                          const x = matchedAsset?.lifetime_years ?? xLifetime
+                          const y = matchedAsset?.migration_time_years ?? yMigration
+                          const z = zThreat
+                          const margin = z - (x + y)
+                          const urgencyTier = margin <= 0
+                            ? "Critical"
+                            : margin <= 2
+                              ? "High"
+                              : margin <= 5
+                                ? "Medium"
+                                : "Low"
+
+                          return (
+                            <TableRow key={record.id}>
+                              <TableCell className="min-w-[250px]">
+                                <div className="font-medium">{record.algorithm}</div>
+                                <div className="mt-1 text-xs text-muted-foreground">
+                                  {finding.location || record.usedBy || record.keySize}
+                                </div>
+                              </TableCell>
+                              <TableCell>{finding.type || "Algorithm"}</TableCell>
+                              <TableCell className="text-center font-mono">{x}y</TableCell>
+                              <TableCell className="text-center font-mono">{y}y</TableCell>
+                              <TableCell className="text-center font-mono">{z}y</TableCell>
+                              <TableCell className={`text-center font-mono ${margin <= 0 ? "text-destructive" : "text-emerald-600"}`}>
+                                {margin > 0 ? "+" : ""}{Number(margin.toFixed(2))}y
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant={urgencyTier === "Critical" ? "destructive" : "secondary"}>
+                                  {urgencyTier}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {matchedAsset?.business_criticality || finding.businessCriticality || ""}
+                              </TableCell>
+                              <TableCell className="text-center font-mono font-semibold text-primary">
+                                {record.qars ?? ""}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-background/50 backdrop-blur">
+              <CardHeader>
+                <CardTitle>HNDL / Mosca Aggregate Analysis</CardTitle>
+                <CardDescription>
+                  Scenario-level exposure check using X + Y {'>'} Z. This is a planning scenario, not a prediction of quantum-computer availability.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border bg-muted/20 p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Overall Scenario</p>
+                  <p className={`mt-2 text-2xl font-semibold ${moscaExposure ? "text-destructive" : "text-emerald-500"}`}>
+                    {moscaExposure ? "Exposure Condition Triggered" : "Exposure Condition Not Triggered"}
+                  </p>
+                  <p className="mt-2 font-mono text-sm">{xLifetime}y + {yMigration}y {moscaExposure ? ">" : "≤"} {zThreat}y</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Shor-vulnerable assets</p>
+                    <p className="mt-1 text-2xl font-semibold">{publicKeyExposureCount}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Unassessed assets</p>
+                    <p className="mt-1 text-2xl font-semibold">{riskMatrix.unassessed}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  HNDL exposure depends on data confidentiality lifetime and migration duration. The page does not infer encrypted-data volume or code-location counts when those fields are absent from the inventory.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <Card className="bg-background/50 backdrop-blur">
+              <CardHeader>
+                <CardTitle>Cryptographic Readiness & Risk Distribution</CardTitle>
+                <CardDescription>
+                  Distribution is calculated from the same four-tier matrix above.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {riskMatrix.tiers.map((tier) => {
+                  const count = tierCounts[tier]
+                  const percent = classifiedTotal > 0 ? (count / classifiedTotal) * 100 : 0
+                  const barClass =
+                    tier === "Classic — Critical"
+                      ? "bg-destructive"
+                      : tier === "Quantum-Prone"
+                        ? "bg-orange-500"
+                        : tier === "Grover-Targeted"
+                          ? "bg-amber-500"
+                          : "bg-emerald-500"
+                  return (
+                    <div key={tier}>
+                      <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                        <span>{tier}</span>
+                        <span className="font-mono text-muted-foreground">{count} · {percent.toFixed(1)}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                        <div className={`h-full rounded-full ${barClass}`} style={{ width: `${percent}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+                <div className="rounded-lg border p-3 text-xs text-muted-foreground">
+                  Crypto-agility status such as hardcoded parameters, upgrade effort, or measured latency is not available in the current asset schema, so it is not scored here.
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-background/50 backdrop-blur">
+              <CardHeader>
+                <CardTitle>Migration Impact Simulation</CardTitle>
+                <CardDescription>
+                  Live summary of the selected Mosca inputs. Change X, Y, or Z in the Mosca Timeline tab to recalculate this panel and the matrix.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <TimelineValue label="X" value={`${xLifetime} years`} description="Data lifetime" />
+                  <TimelineValue label="Y" value={`${yMigration} years`} description="Migration time" />
+                  <TimelineValue label="Z" value={`${zThreat} years`} description="Threat horizon" />
+                </div>
+                <div className="rounded-lg border bg-muted/20 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium">Scenario result</span>
+                    <Badge variant={moscaExposure ? "destructive" : "outline"}>
+                      {moscaExposure ? "Review migration timing" : "Threshold not exceeded"}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 font-mono text-xl">{xLifetime} + {yMigration} {moscaExposure ? ">" : "≤"} {zThreat}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {publicKeyExposureCount} assets are currently in the two public-key tiers. The matrix reclassifies these assets using the selected scenario when asset-specific lifetime or migration values are not provided.
+                  </p>
+                </div>
+                {priorityRecords[0] && (
+                  <div className="rounded-lg border p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Top recorded recommendation</p>
+                    <p className="mt-2 text-lg font-semibold">{priorityRecords[0].recommendation}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">For {priorityRecords[0].algorithm} · {priorityRecords[0].priority} · {priorityRecords[0].window}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
         </TabsContent>
 
