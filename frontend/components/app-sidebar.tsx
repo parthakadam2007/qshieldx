@@ -16,6 +16,7 @@ import {
   Waypoints,
   Target,
   Shield,
+  ShieldCheck,
   User,
   Lock
 } from "lucide-react"
@@ -77,6 +78,11 @@ const navData = {
       title: "Crypto Digital Twin",
       url: "/crypto-digital-twin",
       icon: Waypoints,
+    },
+    {
+      title: "Security",
+      url: "/verification",
+      icon: ShieldCheck,
     },
     {
       title: "Settings",
