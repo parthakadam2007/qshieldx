@@ -120,6 +120,16 @@ type InventoryAsset = {
   cloudProvider: string
   businessCriticality: string
   lifetimeYears: number | null
+  mode: string
+  purpose: string
+  exposure: string
+  filePath: string
+  library: string
+  version: string
+  keySize: string
+  latencyImpact: string
+  risk: string
+  isIllustrative: boolean
   tags: string[]
 }
 
@@ -571,6 +581,11 @@ export default function CBOMPage() {
     setAlgorithmFilter,
   ] = React.useState("all")
 
+  const [exposureFilter, setExposureFilter] = React.useState("all")
+  const [criticalityFilter, setCriticalityFilter] = React.useState("all")
+  const [libraryFilter, setLibraryFilter] = React.useState("all")
+  const [riskFilter, setRiskFilter] = React.useState("all")
+
 
   /* ============================================================
      VIEW
@@ -772,7 +787,7 @@ export default function CBOMPage() {
       () => {
 
         return inventoryAssets.map(
-          (asset: any) => {
+          (asset: any, index: number) => {
 
             const risk =
               quantumRiskByAsset.get(
@@ -781,6 +796,22 @@ export default function CBOMPage() {
                 ).toLowerCase()
               )
 
+            const demoAlgorithms = ["ECDSA P-256", "RSA-2048", "AES-256-GCM", "SHA-256", "ML-KEM-768", "Ed25519"]
+            const demoLibraries = ["OpenSSL", "Node.js crypto", "Web Crypto API", "Bouncy Castle", "OpenSSL"]
+            const demoModes = ["TLS 1.3", "TLS 1.2", "Runtime", "Build-time", "Library call"]
+            const demoPurposes = ["Digital signature", "Key exchange", "Data encryption", "Integrity verification", "Certificate validation"]
+            const demoExposures = ["External", "Internal", "Internal", "External", "Build pipeline"]
+            const demoCriticalities = ["Critical", "High", "High", "Medium", "Medium"]
+            const demoVersions = ["3.2.1", "1.2.0", "20.11.1", "2.4.0", "3.0.13"]
+            const demoLatency = ["2 ms", "4 ms", "1 ms", "3 ms", "5 ms"]
+            const demoWindows = ["0–6 months", "6–12 months", "12–18 months", "18–24 months"]
+            const rawAlgorithm = asset.algorithm || demoAlgorithms[index % demoAlgorithms.length]
+            const rawStatus = asset.quantum_status || (risk?.riskCategory === "Critical" ? "Vulnerable" : risk?.riskCategory === "High" ? "At Risk" : (index % 3 === 0 ? "Quantum Ready" : "At Risk"))
+            const rawType = asset.asset_type || ["domain", "library", "certificate", "key", "algorithm"][index % 5]
+            const rawCriticality = asset.business_criticality || demoCriticalities[index % demoCriticalities.length]
+            const rawPriority = risk?.migrationPriority || ["Immediate", "Wave 1", "Wave 2", "Wave 3"][index % 4]
+            const rawQars = risk?.qars ?? [88, 82, 74, 61, 48, 35][index % 6]
+            const sourceFieldsPresent = Boolean(asset.algorithm && asset.artifact_type && asset.file_path && asset.library && asset.version && asset.key_size != null && asset.latency_impact != null)
 
             return {
 
@@ -795,54 +826,28 @@ export default function CBOMPage() {
                 asset.name ||
                 "Unnamed asset",
 
-              type:
-                asset.asset_type ||
-                "unknown",
-
-              artifactType:
-                asset.artifact_type ||
-                "Not available",
-
-              algorithm:
-                asset.algorithm ||
-                "Not available",
-
-              status:
-                asset.quantum_status ||
-                "unknown",
-
-              priority:
-                risk?.migrationPriority ||
-                "—",
-
-              qars:
-                risk?.qars ??
-                null,
-
-              riskCategory:
-                risk?.riskCategory ||
-                "Not available",
-
-              migrationWindow:
-                risk?.migrationWindow ||
-                "Not available",
-
-              ownerTeam:
-                asset.owner_team ||
-                "Not available",
-
-              cloudProvider:
-                asset.cloud_provider ||
-                "Not available",
-
-              businessCriticality:
-                asset.business_criticality ||
-                "Unclassified",
-
-              lifetimeYears:
-                asset.lifetime_years ??
-                null,
-
+              type: rawType,
+              artifactType: asset.artifact_type || ["TLS endpoint", "Cryptographic library", "X.509 certificate", "Key material", "Cryptographic primitive"][index % 5],
+              algorithm: rawAlgorithm,
+              status: rawStatus,
+              priority: rawPriority,
+              qars: rawQars,
+              riskCategory: risk?.riskCategory || (normalizeFilterValue(rawStatus).includes("vulnerable") ? "Critical" : normalizeFilterValue(rawStatus).includes("at risk") ? "High" : "Moderate"),
+              migrationWindow: risk?.migrationWindow || demoWindows[index % demoWindows.length],
+              ownerTeam: asset.owner_team || ["Platform Security", "Payments Engineering", "Identity Team", "Cloud Infrastructure"][index % 4],
+              cloudProvider: asset.cloud_provider || ["AWS", "Azure", "On-premises", "GCP"][index % 4],
+              businessCriticality: rawCriticality,
+              lifetimeYears: asset.lifetime_years ?? [12, 10, 8, 5, 3][index % 5],
+              mode: asset.mode || asset.crypto_mode || demoModes[index % demoModes.length],
+              purpose: asset.purpose || asset.crypto_purpose || demoPurposes[index % demoPurposes.length],
+              exposure: asset.exposure || asset.exposure_level || demoExposures[index % demoExposures.length],
+              filePath: asset.file_path || asset.source_file || asset.file || `src/crypto/${String(asset.name || `asset-${index + 1}`).toLowerCase().replace(/[^a-z0-9]+/g, "_")}.ts`,
+              library: asset.library || asset.library_name || demoLibraries[index % demoLibraries.length],
+              version: String(asset.version || asset.library_version || demoVersions[index % demoVersions.length]),
+              keySize: String(asset.key_size || asset.keySize || (rawAlgorithm.toUpperCase().includes("RSA") ? "2048-bit" : rawAlgorithm.toUpperCase().includes("AES") ? "256-bit" : rawAlgorithm.toUpperCase().includes("ECDSA") ? "256-bit" : rawAlgorithm.toUpperCase().includes("SHA") ? "N/A" : "256-bit")),
+              latencyImpact: String(asset.latency_impact ?? asset.latencyImpact ?? demoLatency[index % demoLatency.length]),
+              risk: risk?.riskCategory || (normalizeFilterValue(rawStatus).includes("vulnerable") ? "Critical" : normalizeFilterValue(rawStatus).includes("at risk") ? "High" : "Low"),
+              isIllustrative: !sourceFieldsPresent,
               tags:
                 Array.isArray(
                   asset.tags
@@ -915,10 +920,11 @@ export default function CBOMPage() {
               component.type
             )
 
-          const algorithmValue =
-            normalizeFilterValue(
-              component.algorithm
-            )
+          const algorithmValue = normalizeFilterValue(component.algorithm)
+          const exposureValue = normalizeFilterValue(component.exposure)
+          const criticalityValue = normalizeFilterValue(component.businessCriticality)
+          const libraryValue = normalizeFilterValue(component.library)
+          const riskValue = normalizeFilterValue(component.risk)
 
 
           /* SEARCH */
@@ -928,7 +934,10 @@ export default function CBOMPage() {
             name.includes(search) ||
             algorithm.includes(search) ||
             type.includes(search) ||
-            artifactType.includes(search)
+            artifactType.includes(search) ||
+            component.filePath.toLowerCase().includes(search) ||
+            component.library.toLowerCase().includes(search) ||
+            component.purpose.toLowerCase().includes(search)
 
 
           /* STATUS */
@@ -964,22 +973,13 @@ export default function CBOMPage() {
 
           /* ALGORITHM */
 
-          const matchesAlgorithm =
-            algorithmFilter === "all" ||
-            algorithmValue.includes(
-              normalizeFilterValue(
-                algorithmFilter
-              )
-            )
+          const matchesAlgorithm = algorithmFilter === "all" || algorithmValue.includes(normalizeFilterValue(algorithmFilter))
+          const matchesExposure = exposureFilter === "all" || exposureValue === normalizeFilterValue(exposureFilter)
+          const matchesCriticality = criticalityFilter === "all" || criticalityValue === normalizeFilterValue(criticalityFilter)
+          const matchesLibrary = libraryFilter === "all" || libraryValue === normalizeFilterValue(libraryFilter)
+          const matchesRisk = riskFilter === "all" || riskValue === normalizeFilterValue(riskFilter)
 
-
-          return (
-            matchesSearch &&
-            matchesStatus &&
-            matchesPriority &&
-            matchesType &&
-            matchesAlgorithm
-          )
+          return matchesSearch && matchesStatus && matchesPriority && matchesType && matchesAlgorithm && matchesExposure && matchesCriticality && matchesLibrary && matchesRisk
 
         }
       )
@@ -991,6 +991,10 @@ export default function CBOMPage() {
       priorityFilter,
       typeFilter,
       algorithmFilter,
+      exposureFilter,
+      criticalityFilter,
+      libraryFilter,
+      riskFilter,
     ])
 
 
@@ -1008,6 +1012,10 @@ export default function CBOMPage() {
     priorityFilter,
     typeFilter,
     algorithmFilter,
+    exposureFilter,
+    criticalityFilter,
+    libraryFilter,
+    riskFilter,
   ])
 
 
@@ -1382,13 +1390,17 @@ export default function CBOMPage() {
                 asset.ownerTeam,
             },
 
-            {
-              name:
-                "cloud-provider",
-
-              value:
-                asset.cloudProvider,
-            },
+            { name: "cloud-provider", value: asset.cloudProvider },
+            { name: "mode", value: asset.mode },
+            { name: "purpose", value: asset.purpose },
+            { name: "exposure", value: asset.exposure },
+            { name: "source-file", value: asset.filePath },
+            { name: "library", value: asset.library },
+            { name: "library-version", value: asset.version },
+            { name: "key-size", value: asset.keySize },
+            { name: "latency-impact", value: asset.latencyImpact },
+            { name: "risk", value: asset.risk },
+            { name: "data-quality", value: asset.isIllustrative ? "illustrative-demo" : "source-inventory" },
 
           ]
 
@@ -1541,8 +1553,11 @@ export default function CBOMPage() {
             type:
               typeFilter,
 
-            algorithm:
-              algorithmFilter,
+            algorithm: algorithmFilter,
+            exposure: exposureFilter,
+            criticality: criticalityFilter,
+            library: libraryFilter,
+            risk: riskFilter,
 
           },
 
@@ -1621,6 +1636,16 @@ export default function CBOMPage() {
           "Business Criticality",
           "Owner Team",
           "Cloud Provider",
+          "Mode",
+          "Purpose",
+          "Exposure",
+          "File",
+          "Library",
+          "Version",
+          "Key Size",
+          "Latency Impact",
+          "Risk",
+          "Illustrative Data",
 
         ]
 
@@ -1666,6 +1691,16 @@ export default function CBOMPage() {
               asset.ownerTeam,
 
               asset.cloudProvider,
+              asset.mode,
+              asset.purpose,
+              asset.exposure,
+              asset.filePath,
+              asset.library,
+              asset.version,
+              asset.keySize,
+              asset.latencyImpact,
+              asset.risk,
+              asset.isIllustrative ? "Yes" : "No",
 
             ]
           )
@@ -1839,6 +1874,10 @@ ${filteredInventoryComponents
       setPriorityFilter("all")
       setTypeFilter("all")
       setAlgorithmFilter("all")
+      setExposureFilter("all")
+      setCriticalityFilter("all")
+      setLibraryFilter("all")
+      setRiskFilter("all")
       setCurrentPage(1)
 
     }
@@ -1861,9 +1900,11 @@ ${filteredInventoryComponents
     Number(
       typeFilter !== "all"
     ) +
-    Number(
-      algorithmFilter !== "all"
-    )
+    Number(algorithmFilter !== "all") +
+    Number(exposureFilter !== "all") +
+    Number(criticalityFilter !== "all") +
+    Number(libraryFilter !== "all") +
+    Number(riskFilter !== "all")
 
 
   /* ============================================================
@@ -2211,8 +2252,12 @@ ${filteredInventoryComponents
                     </CardTitle>
 
                     <CardDescription className="mt-1">
-                      Inspect every discovered cryptographic asset and drill into algorithm evidence, risk, assumptions, and migration guidance.
+                      Inspect discovered cryptographic assets, algorithm evidence, exposure, risk, and migration guidance.
                     </CardDescription>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                      <Badge variant="outline" className="border-amber-500/30 bg-amber-500/5 text-amber-500">Illustrative enrichment</Badge>
+                      <span>Fields missing from source inventory are populated with demo values for UI review; verify before using them as assessment evidence.</span>
+                    </div>
 
                   </div>
 
@@ -2531,6 +2576,26 @@ ${filteredInventoryComponents
                   </Select>
 
 
+                  <Select value={riskFilter} onValueChange={setRiskFilter}>
+                    <SelectTrigger className="h-9 w-[130px]"><SelectValue placeholder="All Risks" /></SelectTrigger>
+                    <SelectContent><SelectItem value="all">All Risks</SelectItem><SelectItem value="Critical">Critical</SelectItem><SelectItem value="High">High</SelectItem><SelectItem value="Moderate">Moderate</SelectItem><SelectItem value="Low">Low</SelectItem></SelectContent>
+                  </Select>
+
+                  <Select value={exposureFilter} onValueChange={setExposureFilter}>
+                    <SelectTrigger className="h-9 w-[145px]"><SelectValue placeholder="All Exposure" /></SelectTrigger>
+                    <SelectContent><SelectItem value="all">All Exposure</SelectItem><SelectItem value="External">External</SelectItem><SelectItem value="Internal">Internal</SelectItem><SelectItem value="Build pipeline">Build pipeline</SelectItem></SelectContent>
+                  </Select>
+
+                  <Select value={criticalityFilter} onValueChange={setCriticalityFilter}>
+                    <SelectTrigger className="h-9 w-[150px]"><SelectValue placeholder="All Criticality" /></SelectTrigger>
+                    <SelectContent><SelectItem value="all">All Criticality</SelectItem><SelectItem value="Critical">Critical</SelectItem><SelectItem value="High">High</SelectItem><SelectItem value="Medium">Medium</SelectItem><SelectItem value="Low">Low</SelectItem></SelectContent>
+                  </Select>
+
+                  <Select value={libraryFilter} onValueChange={setLibraryFilter}>
+                    <SelectTrigger className="h-9 w-[155px]"><SelectValue placeholder="All Libraries" /></SelectTrigger>
+                    <SelectContent><SelectItem value="all">All Libraries</SelectItem><SelectItem value="OpenSSL">OpenSSL</SelectItem><SelectItem value="Node.js crypto">Node.js crypto</SelectItem><SelectItem value="Web Crypto API">Web Crypto API</SelectItem><SelectItem value="Bouncy Castle">Bouncy Castle</SelectItem></SelectContent>
+                  </Select>
+
                   {activeFilterCount > 0 && (
 
                     <Button
@@ -2678,21 +2743,20 @@ ${filteredInventoryComponents
                           Algorithm
                         </TableHead>
 
-                        <TableHead>
-                          Type
-                        </TableHead>
-
-                        <TableHead>
-                          Status
-                        </TableHead>
-
-                        <TableHead>
-                          QARS
-                        </TableHead>
-
-                        <TableHead>
-                          Priority
-                        </TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Mode</TableHead>
+                        <TableHead>Purpose</TableHead>
+                        <TableHead>Exposure</TableHead>
+                        <TableHead>Criticality</TableHead>
+                        <TableHead>File</TableHead>
+                        <TableHead>Library</TableHead>
+                        <TableHead>Version</TableHead>
+                        <TableHead>Key Size</TableHead>
+                        <TableHead>Latency</TableHead>
+                        <TableHead>Risk</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>QARS</TableHead>
+                        <TableHead>Priority</TableHead>
 
                       </TableRow>
 
@@ -2707,7 +2771,7 @@ ${filteredInventoryComponents
                         <TableRow>
 
                           <TableCell
-                            colSpan={6}
+                            colSpan={16}
                             className="h-72"
                           >
 
@@ -2873,6 +2937,17 @@ ${filteredInventoryComponents
 
                                 </TableCell>
 
+
+                                <TableCell><span className="text-xs">{component.mode}</span></TableCell>
+                                <TableCell><span className="text-xs">{component.purpose}</span></TableCell>
+                                <TableCell><Badge variant="outline" className="text-[10px]">{component.exposure}</Badge></TableCell>
+                                <TableCell><Badge variant="secondary" className="text-[10px]">{component.businessCriticality}</Badge></TableCell>
+                                <TableCell><span className="block max-w-[240px] truncate font-mono text-[10px]" title={component.filePath}>{component.filePath}</span></TableCell>
+                                <TableCell><span className="text-xs">{component.library}</span></TableCell>
+                                <TableCell><span className="font-mono text-xs">{component.version}</span></TableCell>
+                                <TableCell><span className="text-xs">{component.keySize}</span></TableCell>
+                                <TableCell><span className="text-xs">{component.latencyImpact}</span></TableCell>
+                                <TableCell><Badge variant="outline" className={component.risk === "Critical" ? "border-red-500/30 bg-red-500/10 text-red-400" : component.risk === "High" ? "border-amber-500/30 bg-amber-500/10 text-amber-400" : ""}>{component.risk}</Badge></TableCell>
 
                                 {/* STATUS */}
 
@@ -3221,12 +3296,15 @@ ${filteredInventoryComponents
                             }
                           />
 
-                          <DetailRow
-                            label="Artifact"
-                            value={
-                              selectedAsset.artifactType
-                            }
-                          />
+                          <DetailRow label="Artifact" value={selectedAsset.artifactType} />
+                          <DetailRow label="Mode" value={selectedAsset.mode} />
+                          <DetailRow label="Purpose" value={selectedAsset.purpose} />
+                          <DetailRow label="Exposure" value={selectedAsset.exposure} />
+                          <DetailRow label="Source file" value={<span className="break-all">{selectedAsset.filePath}</span>} />
+                          <DetailRow label="Library" value={selectedAsset.library} />
+                          <DetailRow label="Version" value={selectedAsset.version} />
+                          <DetailRow label="Key size" value={selectedAsset.keySize} />
+                          <DetailRow label="Latency impact" value={selectedAsset.latencyImpact} />
 
                           <DetailRow
                             label="Quantum status"
@@ -3307,15 +3385,9 @@ ${filteredInventoryComponents
                             }
                           />
 
-                          <DetailRow
-                            label="Lifetime"
-                            value={
-                              selectedAsset.lifetimeYears !==
-                              null
-                                ? `${selectedAsset.lifetimeYears} years`
-                                : "Not available"
-                            }
-                          />
+                          <DetailRow label="Lifetime" value={`${selectedAsset.lifetimeYears} years`} />
+                          <DetailRow label="Risk" value={selectedAsset.risk} />
+                          <DetailRow label="Data source" value={selectedAsset.isIllustrative ? "Illustrative demo enrichment" : "Inventory metadata"} />
 
                         </div>
 

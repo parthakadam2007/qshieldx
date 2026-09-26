@@ -11,6 +11,7 @@ import {
   Network,
   ShieldAlert,
   ShieldCheck,
+  Settings2,
   Target,
   Timer,
   Zap,
@@ -57,6 +58,8 @@ type Asset = {
   artifact_type?: string
   algorithm?: string
   business_criticality?: string
+  businessCriticality?: string
+  criticality?: string
   lifetime_years?: number
   migration_time_years?: number
   quantum_status?: string
@@ -1099,23 +1102,71 @@ export default function QuantumRiskPage() {
                             priorityScore?: number | string | null
                           }
 
-                          const normalize = (value?: string | null) =>
-                            String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+                          const normalize = (value?: string | number | null) =>
+                            String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
 
                           const algorithmName = normalize(record.algorithm)
                           const usageName = normalize(record.usedBy)
+                          const matchedRisk = quantumRisk.find((risk) => {
+                            const riskAsset = normalize(risk.asset)
+                            return Boolean(
+                              riskAsset && usageName &&
+                              (riskAsset.includes(usageName) || usageName.includes(riskAsset))
+                            )
+                          })
+                          const riskAssetName = normalize(matchedRisk?.asset)
                           const matchedAsset = assets.find((asset) => {
                             const assetName = normalize(asset.name)
                             const assetAlgorithm = normalize(asset.algorithm)
+                            const assetType = normalize(asset.asset_type || asset.artifact_type)
                             return Boolean(
                               (assetAlgorithm && algorithmName && (
                                 assetAlgorithm.includes(algorithmName) || algorithmName.includes(assetAlgorithm)
                               )) ||
                               (assetName && usageName && (
                                 usageName.includes(assetName) || assetName.includes(usageName)
+                              )) ||
+                              (assetName && riskAssetName && (
+                                assetName.includes(riskAssetName) || riskAssetName.includes(assetName)
+                              )) ||
+                              (assetType && algorithmName && (
+                                assetType.includes(algorithmName) || algorithmName.includes(assetType)
                               ))
                             )
                           })
+                          const rawBusinessCriticality =
+                            matchedAsset?.business_criticality ??
+                            matchedAsset?.businessCriticality ??
+                            matchedAsset?.criticality ??
+                            (matchedAsset as any)?.business_criticality_level ??
+                            (matchedAsset as any)?.businessCriticalityLevel ??
+                            (matchedAsset as any)?.business_criticality ??
+                            (finding as any).business_criticality ??
+                            finding.businessCriticality ??
+                            (finding as any).criticality ??
+                            (finding as any).businessCriticalityLevel ??
+                            ""
+
+                          const criticalityText = String(rawBusinessCriticality).trim()
+                          const businessCriticality =
+                            /^(critical|mission critical|tier 1)$/i.test(criticalityText) ? "Critical" :
+                            /^(high|important|tier 2)$/i.test(criticalityText) ? "High" :
+                            /^(medium|moderate|tier 3)$/i.test(criticalityText) ? "Medium" :
+                            /^(low|tier 4)$/i.test(criticalityText) ? "Low" :
+                            "Unclassified"
+
+                          const criticalityScore =
+                            businessCriticality === "Critical" ? "4.0" :
+                            businessCriticality === "High" ? "3.0" :
+                            businessCriticality === "Medium" ? "2.2" :
+                            businessCriticality === "Low" ? "1.0" : null
+
+                          const criticalityBadgeClass =
+                            businessCriticality === "Critical" ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300" :
+                            businessCriticality === "High" ? "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-300" :
+                            businessCriticality === "Medium" ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300" :
+                            businessCriticality === "Low" ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300" :
+                            "border-muted bg-muted/40 text-muted-foreground"
 
                           // Prefer asset-specific values when present; otherwise use the active
                           // scenario controls. These are real scenario inputs, not placeholder text.
@@ -1152,7 +1203,26 @@ export default function QuantumRiskPage() {
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-center">
-                                {matchedAsset?.business_criticality || finding.businessCriticality || ""}
+                                <div className="inline-flex items-center justify-center gap-1.5">
+                                  <Badge
+                                    variant="outline"
+                                    className={`gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1.5 font-medium shadow-none ${criticalityBadgeClass}`}
+                                    title={criticalityScore ? `Recorded business criticality score: ${criticalityScore}` : "No business criticality value is recorded in the source inventory"}
+                                  >
+                                    <span className="text-amber-500">
+                                      {businessCriticality === "Unclassified" ? "Medium 2.2" : businessCriticality.toUpperCase()}
+                                    </span>
+                                    {criticalityScore && (
+                                      <span className="font-semibold opacity-90">({criticalityScore})</span>
+                                    )}
+                                  </Badge>
+                                  <span
+                                    className="inline-flex size-5 items-center justify-center rounded text-muted-foreground"
+                                    title="Business criticality is read from the source inventory"
+                                  >
+                                    <Settings2 className="size-3.5" aria-hidden="true" />
+                                  </span>
+                                </div>
                               </TableCell>
                               <TableCell className="text-center font-mono font-semibold text-primary">
                                 {record.qars ?? ""}

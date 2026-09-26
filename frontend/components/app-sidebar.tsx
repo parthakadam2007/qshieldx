@@ -17,7 +17,8 @@ import {
   Target,
   Shield,
   User,
-  Lock
+  Lock,
+  Search
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -41,47 +42,75 @@ const navData = {
       plan: "Enterprise Cryptography",
     },
   ],
-  navMain: [
+
+  sections: [
     {
-      title: "Overview",
-      url: "/overview",
-      icon: Map,
-      isActive: true,
+      // Standalone Dashboard item
+      items: [
+        {
+          title: "Dashboard",
+          url: "/overview",
+          icon: Map,
+        },
+      ],
     },
+
     {
-      title: "Discovery",
-      url: "/targets",
-      icon: Target,
+      title: "Analysis",
+      items: [
+        {
+          title: "Discovery",
+          url: "/targets",
+          icon: Target,
+        },
+        {
+          title: "Findings & Validation",
+          url: "/sovereign-ai",
+          icon: Search,
+        },
+        {
+          title: "Intelligence",
+          url: "/intelligence",
+          icon: SquareTerminal,
+        },
+        {
+          title: "CBOM",
+          url: "/cbom",
+          icon: BookOpen,
+        },
+      ],
     },
+
     {
-      title: "Intelligence",
-      url: "/intelligence",
-      icon: SquareTerminal,
+      title: "Security",
+      items: [
+        {
+          title: "Quantum Security",
+          url: "/quantum-risk",
+          icon: Network,
+        },
+        {
+          title: "Crypto Review",
+          url: "/crypto-review",
+          icon: Lock,
+        },
+        {
+          title: "Crypto Digital Twin",
+          url: "/crypto-digital-twin",
+          icon: Waypoints,
+        },
+      ],
     },
+
     {
-      title: "Quantum Security",
-      url: "/quantum-risk",
-      icon: Network,
-    },
-    {
-      title: "Reports",
-      url: "/cbom",
-      icon: BookOpen,
-    },
-    {
-      title: "Crypto Review",
-      url: "/crypto-review",
-      icon: Lock,
-    },
-    {
-      title: "Crypto Digital Twin",
-      url: "/crypto-digital-twin",
-      icon: Waypoints,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
+      title: "System",
+      items: [
+        {
+          title: "Settings",
+          url: "/settings",
+          icon: Settings2,
+        },
+      ],
     },
   ],
 }
@@ -108,7 +137,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={navData.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navData.navMain} />
+        <NavMain sections={navData.sections} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />
