@@ -3,15 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
-  Plus,
-  X,
   Sparkles,
   Send,
   Bot,
   User,
   ChevronDown,
   RotateCcw,
-  ShieldCheck,
   Loader2,
 } from "lucide-react";
 
@@ -68,7 +65,11 @@ QShieldX uses its risk assessment and migration priorities to help identify wher
 Note: this is a general explanation. A specific asset's risk requires its actual inventory and assessment records.`;
   }
 
-  if (q.includes("mosca") || q.includes("d + t") || q.includes("d+t")) {
+  if (
+    q.includes("mosca") ||
+    q.includes("d + t") ||
+    q.includes("d+t")
+  ) {
     return `Mosca's model helps assess whether data may remain sensitive beyond the expected arrival of a cryptographically relevant quantum computer.
 
 The condition is:
@@ -101,7 +102,10 @@ The result depends on the assumptions entered. It is a planning model, not a pre
 For a data-driven priority list, the assistant must use the current QShieldX asset inventory and risk records. This frontend demo does not yet query those records.`;
   }
 
-  if (q.includes("cbom") || q.includes("bill of materials")) {
+  if (
+    q.includes("cbom") ||
+    q.includes("bill of materials")
+  ) {
     return `A Cryptographic Bill of Materials (CBOM) records cryptographic components used by a system.
 
 A CBOM can help document:
@@ -142,9 +146,26 @@ Try one of the suggested questions below.`;
 export default function GlobalChatbot() {
   const pathname = usePathname();
 
+  // Hide the chatbot on public and authentication pages.
+  const hiddenRoutes = [
+    "/",
+    "/landing",
+    "/login",
+    "/register",
+    "/auth/login",
+    "/auth/register",
+  ];
+
+  const shouldHideChatbot =
+    hiddenRoutes.includes(pathname) ||
+    pathname.startsWith("/login/") ||
+    pathname.startsWith("/register/") ||
+    pathname.startsWith("/auth/");
+
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -169,6 +190,11 @@ export default function GlobalChatbot() {
     }
   }, [isOpen]);
 
+  // Hide the entire chatbot on the selected routes.
+  if (shouldHideChatbot) {
+    return null;
+  }
+
   async function sendMessage(text?: string) {
     const question = (text ?? input).trim();
 
@@ -185,9 +211,8 @@ export default function GlobalChatbot() {
     setIsTyping(true);
 
     try {
-      // FRONTEND DEMO:
-      // Replace this with the FastAPI /ai/chat request
-      // when the backend endpoint is ready.
+      // Frontend demo response.
+      // Replace this with your FastAPI chat request when ready.
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const answer = getDemoAnswer(question, pathname || "/");
@@ -248,6 +273,7 @@ export default function GlobalChatbot() {
 
             <div className="min-w-0 flex-1">
               <div className="font-semibold">QShieldX AI</div>
+
               <div className="flex items-center gap-1.5 text-xs text-zinc-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
                 QShieldX Assistant
@@ -255,6 +281,7 @@ export default function GlobalChatbot() {
             </div>
 
             <button
+              type="button"
               onClick={resetChat}
               className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/10 hover:text-white"
               title="Clear chat"
@@ -264,6 +291,7 @@ export default function GlobalChatbot() {
             </button>
 
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
               className="rounded-lg p-2 text-zinc-400 transition hover:bg-white/10 hover:text-white"
               title="Minimize chat"
@@ -320,7 +348,7 @@ export default function GlobalChatbot() {
             {isTyping && (
               <div className="flex items-center gap-2 text-sm text-zinc-400">
                 <Loader2 size={16} className="animate-spin" />
-                QshieldX AI is thinking...
+                QShieldX AI is thinking...
               </div>
             )}
 
@@ -337,8 +365,9 @@ export default function GlobalChatbot() {
               <div className="flex flex-wrap gap-2">
                 {suggestions.map((suggestion) => (
                   <button
+                    type="button"
                     key={suggestion}
-                    onClick={() => sendMessage(suggestion)}
+                    onClick={() => void sendMessage(suggestion)}
                     disabled={isTyping}
                     className="
                       rounded-full border border-white/10
@@ -395,22 +424,23 @@ export default function GlobalChatbot() {
         </section>
       )}
 
-      {/* Floating + button */}
+      {/* Floating robot button — original appearance preserved */}
       <div className="flex justify-end">
         <button
+          type="button"
           onClick={() => setIsOpen((previous) => !previous)}
           className="
             flex h-14 w-14 items-center justify-center
-            rounded-full bg-violet-600 text-white
+            rounded-full bg-black text-white
             shadow-lg shadow-violet-950/40
             transition duration-200
-            hover:scale-105 hover:bg-violet-500
-            focus:outline-none focus:ring-4 focus:ring-violet-400/30
+            hover:scale-105 hover:bg-black
+            focus:outline-none focus:ring-4 focus:ring-black
           "
           aria-label={isOpen ? "Close AI assistant" : "Open AI assistant"}
           title="Ask QShieldX AI"
         >
-          {isOpen ? <X size={24} /> : <Plus size={27} />}
+          {isOpen ? <Bot size={24} /> : <Bot size={27} />}
         </button>
       </div>
     </div>

@@ -127,3 +127,38 @@
     @apply font-sans;
     }
 }
+
+
+.print-report {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  /* Completely exclude the verification dashboard */
+  .verification-dashboard {
+    display: none !important;
+  }
+
+  /* Keep the CryptoScan report visible */
+  .cryptoscan-report {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}

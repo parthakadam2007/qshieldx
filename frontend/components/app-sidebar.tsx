@@ -107,26 +107,6 @@ const navData = {
       title: "More",
       items: [
         {
-          title: "Quantum Security",
-          url: "/quantum-risk",
-          icon: Network,
-        },
-        {
-          title: "Reports",
-          url: "/cbom",
-          icon: BookOpen,
-        },
-        {
-          title: "Crypto Review",
-          url: "/crypto-review",
-          icon: Lock,
-        },
-        {
-          title: "Crypto Digital Twin",
-          url: "/crypto-digital-twin",
-          icon: Waypoints,
-        },
-        {
           title: "Security",
           url: "/verification",
           icon: ShieldCheck,

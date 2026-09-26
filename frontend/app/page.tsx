@@ -119,10 +119,17 @@ const features = [
   },
   {
     icon: Eye,
+    title: "Blockchain & Merkle Verification",
+    description:
+      "Validate cryptographic asset integrity through SHA-256 hashing, Merkle tree construction, digital signatures, and blockchain anchoring on the Sepolia testnet. Compare computed and on-chain Merkle roots, verify CBOM authenticity, and maintain tamper-evident records with transaction-level and IPFS proof for transparent, auditable verification.",
+  },
+  {
+    icon: Eye,
     title: "Actionable Security Dashboards",
     description:
       "Expose health, risk trends, critical assets, AI evidence, CBOM inventory, Digital Twin paths, PQC migration, remediation, and compliance status in one workflow.",
   },
+
 ]
 const workflow = [
   {

@@ -11,8 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { merkleMetadata, blockchainProof, verificationSteps, computedRootHash, onChainRootHash, leafNodes, treeNodes } from "@/constants/merkleData"
 import { VerificationStepper } from "@/components/verification-stepper"
 import { MerkleTreeCanvas } from "@/components/merkle-tree"
-import { jsPDF } from "jspdf"
-import html2canvas from "html2canvas"
+
 
 interface VerificationState {
   isVerifying: boolean
@@ -79,79 +78,81 @@ export function VerificationPage() {
   }, [])
 
   // Export PDF function
-  const handleExportPDF = useCallback(async () => {
-    const element = dashboardRef.current
-    if (!element) return
+  // const handleExportPDF = useCallback(async () => {
+  //   const element = dashboardRef.current
+  //   if (!element) return
 
-    const button = document.querySelector('button:has([data-lucide="download"])') as HTMLButtonElement
-    const originalText = button?.innerHTML
+  //   const button = document.querySelector('button:has([data-lucide="download"])') as HTMLButtonElement
+  //   const originalText = button?.innerHTML
     
-    if (button) {
-      button.disabled = true
-      button.innerHTML = '<svg class="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating PDF...'
-    }
+  //   if (button) {
+  //     button.disabled = true
+  //     button.innerHTML = '<svg class="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating PDF...'
+  //   }
 
-    // Save original styles to restore later
-    const originalWidth = element.style.width
-    const originalOverflow = element.style.overflow
+  //   // Save original styles to restore later
+  //   const originalWidth = element.style.width
+  //   const originalOverflow = element.style.overflow
 
-    // Temporarily expand to full scroll width for canvas capture
-    element.style.width = `${element.scrollWidth}px`
-    element.style.overflow = 'visible'
+  //   // Temporarily expand to full scroll width for canvas capture
+  //   element.style.width = `${element.scrollWidth}px`
+  //   element.style.overflow = 'visible'
 
-    // Hide problematic elements during capture
-    const svgs = element.querySelectorAll('svg')
-    const originalSvgDisplays: string[] = []
-    svgs.forEach((svg, i) => {
-      originalSvgDisplays[i] = svg.style.display
-      svg.style.display = 'none'
-    })
+  //   // Hide problematic elements during capture
+  //   const svgs = element.querySelectorAll('svg')
+  //   const originalSvgDisplays: string[] = []
+  //   svgs.forEach((svg, i) => {
+  //     originalSvgDisplays[i] = svg.style.display
+  //     svg.style.display = 'none'
+  //   })
 
-    try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: true,
-        backgroundColor: '#ffffff',
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        onclone: (clonedDoc) => {
-          // Hide SVGs in cloned document too
-          const clonedSvgs = clonedDoc.querySelectorAll('svg')
-          clonedSvgs.forEach((svg) => {
-            svg.style.display = 'none'
-          })
-        }
-      })
+  //   try {
+  //     const canvas = await html2canvas(element, {
+  //       scale: 2,
+  //       useCORS: true,
+  //       logging: true,
+  //       backgroundColor: '#ffffff',
+  //       windowWidth: element.scrollWidth,
+  //       windowHeight: element.scrollHeight,
+  //       onclone: (clonedDoc) => {
+  //         // Hide SVGs in cloned document too
+  //         const clonedSvgs = clonedDoc.querySelectorAll('svg')
+  //         clonedSvgs.forEach((svg) => {
+  //           svg.style.display = 'none'
+  //         })
+  //       }
+  //     })
 
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('l', 'mm', 'a4') // 'l' for landscape is better for wide trees
-      const imgProperties = pdf.getImageProperties(imgData)
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width
+  //     const imgData = canvas.toDataURL('image/png')
+  //     const pdf = new jsPDF('l', 'mm', 'a4') // 'l' for landscape is better for wide trees
+  //     const imgProperties = pdf.getImageProperties(imgData)
+  //     const pdfWidth = pdf.internal.pageSize.getWidth()
+  //     const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
-      pdf.save('QShieldX-Blockchain-Verification-Report.pdf')
-    } catch (error) {
-      console.error("PDF generation failed:", error)
-      alert("Failed to generate PDF. Please try again. Check console for details.")
-    } finally {
-      // Restore original styles
-      element.style.width = originalWidth
-      element.style.overflow = originalOverflow
+  //     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+  //     pdf.save('QShieldX-Blockchain-Verification-Report.pdf')
+  //   } catch (error) {
+  //     console.error("PDF generation failed:", error)
+  //     alert("Failed to generate PDF. Please try again. Check console for details.")
+  //   } finally {
+  //     // Restore original styles
+  //     element.style.width = originalWidth
+  //     element.style.overflow = originalOverflow
       
-      // Restore SVG visibility
-      svgs.forEach((svg, i) => {
-        svg.style.display = originalSvgDisplays[i] || 'block'
-      })
+  //     // Restore SVG visibility
+  //     svgs.forEach((svg, i) => {
+  //       svg.style.display = originalSvgDisplays[i] || 'block'
+  //     })
       
-      if (button) {
-        button.disabled = false
-        button.innerHTML = originalText || '<svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export Blockchain Report (PDF)'
-      }
-    }
-  }, [])
-
+  //     if (button) {
+  //       button.disabled = false
+  //       button.innerHTML = originalText || '<svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export Blockchain Report (PDF)'
+  //     }
+  //   }
+  // }, [])
+  const handleExportPDF = useCallback(() => {
+  window.open("/cryptoscan-report", "_blank");
+}, [])
   // Reset state when not verifying
   useEffect(() => {
     if (!state.isVerifying && !state.showSuccess) {
@@ -175,7 +176,7 @@ export function VerificationPage() {
         </header>
 
         {/* Action Bar */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="no-print mb-6 flex flex-col sm:flex-row gap-4">
           <Button
             variant="default"
             onClick={handleVerifyClick}

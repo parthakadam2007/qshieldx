@@ -42,7 +42,7 @@ export interface MerkleMetadata {
 }
 
 export const merkleMetadata: MerkleMetadata = {
-  repositoryName: "QShieldX-Core",
+  repositoryName: "mypay/mypay-payment-gateway",
   scanId: "SCN-2026-09-25-001",
   cbomSpec: "CycloneDX v1.5",
   assetsCount: 247,
