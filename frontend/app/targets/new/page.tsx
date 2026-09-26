@@ -77,6 +77,9 @@ const [businessCriticality, setBusinessCriticality] =
     semgrep: true
   })
 
+  // const [hybridScanEnabled, setHybridScanEnabled] = React.useState(tru)
+  const [advancedDetectionEnabled, setAdvancedDetectionEnabled] =
+  React.useState(true)
   React.useEffect(() => {
     if (!isDemoMode || !data.scan) return
     setOrgName(data.scan.organization)
@@ -797,6 +800,76 @@ const [businessCriticality, setBusinessCriticality] =
                     </HoverCardContent>
                   </HoverCard>
 
+                 {/* Advanced Detection Layers */}
+                <div className="rounded-lg border border-black p-4">
+                  {/* Header and Master Switch */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold">
+                        Advanced 8-tier Detection Layers
+                      </h3>
+
+                      <p className="mt-1 text-xs text-muted-foreground">
+                      Enable 8-tier hybrid scanning (Asset Discovery, NHI & Cloud, AST,
+                      Pattern/Regex, Entropy & Secrets, SCA, Certificates & TLS, Runtime
+                      & Artifacts).
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={advancedDetectionEnabled}
+                      aria-label="Enable Advanced Detection Layers"
+                      onClick={() =>
+                        setAdvancedDetectionEnabled((enabled) => !enabled)
+                      }
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                        advancedDetectionEnabled
+                          ? "bg-emerald-500"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block size-4 rounded-full bg-white shadow transition-transform ${
+                          advancedDetectionEnabled
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Detection Layers — compact inline layout */}
+                  {advancedDetectionEnabled && (
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                      {[
+                        "T1 — Asset Discovery",
+                          "T2 — NHI & Cloud",
+                          "T3 — AST Analysis",
+                          "T4 — Pattern / Regex",
+                          "T5 — Entropy & Secrets",
+                          "T6 — SCA & Crypto Libraries",
+                          "T7 — Certificates & TLS",
+                          "T8 — Runtime & Artifacts",
+                      ].map((layer) => (
+                        <div
+                          key={layer}
+                          className="flex items-center gap-1.5 text-sm text-foreground/90"
+                        >
+                          <CheckCircle2 className="size-3.5 shrink-0 text-emerald-500" />
+                          <span>{layer}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!advancedDetectionEnabled && (
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Advanced detection layers are disabled for this scan.
+                    </p>
+                  )}
+                </div>
                 </CardContent>
               </Card>
             </div>
