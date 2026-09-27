@@ -89,7 +89,7 @@ const initialProjects: ProjectItem[] = [
   },
   {
     id: "proj-2",
-    name: "mypay",
+    name: "Roblox",
     status: "active",
     statusText: "Active · Quantum Ready",
     refId: "qsx-9904",
@@ -264,7 +264,7 @@ export default function ProjectsView() {
     user?.user_name ||
     user?.email?.split("@")[0] ||
     "User"
-  const orgName = `${userDisplayName}'s Workspace`
+  const orgName = `Workspace`
 
   return (
     <div className="min-h-screen bg-background text-foreground flex antialiased select-none font-sans">
@@ -736,11 +736,7 @@ export default function ProjectsView() {
                         <CardContent className="p-5 pt-2 flex flex-col justify-end gap-3">
                           {project.quantumReadyPercent !== undefined && (
                             <div className="space-y-1">
-                              <div className="flex justify-between text-[11px] text-muted-foreground">
-                                <span>Quantum Readiness</span>
-                                <span className="font-semibold text-foreground">{project.quantumReadyPercent}%</span>
-                              </div>
-                              <Progress value={project.quantumReadyPercent} className="h-1.5" />
+                  
                             </div>
                           )}
 
@@ -826,76 +822,7 @@ export default function ProjectsView() {
               </div>
 
               {/* Right Sidebar Section */}
-              <div className="lg:col-span-4 xl:col-span-3 space-y-6">
-                <Card className="bg-card shadow-xs">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <CardTitle className="text-base font-semibold">Free Plan Usage</CardTitle>
-                        <CardDescription className="text-xs">Current billing cycle</CardDescription>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsProModalOpen(true)}
-                        className="h-7 text-xs font-medium"
-                      >
-                        Upgrade
-                      </Button>
-                    </div>
-                  </CardHeader>
 
-                  <CardContent className="space-y-4 pt-1">
-                    {/* Egress */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Egress</span>
-                        <span className="font-mono text-xs font-medium">0.00 / 5 GB</span>
-                      </div>
-                      <Progress value={0} className="h-1.5" />
-                    </div>
-
-                    {/* Database size */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Database size</span>
-                        <span className="font-mono text-xs font-medium">0 / 500 MB</span>
-                      </div>
-                      <Progress value={0} className="h-1.5" />
-                    </div>
-
-                    {/* Monthly active users */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Monthly active users</span>
-                        <span className="font-mono text-xs font-medium">2 / 50,000</span>
-                      </div>
-                      <Progress value={0.1} className="h-1.5" />
-                    </div>
-
-                    {/* File storage */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">File storage</span>
-                        <span className="font-mono text-xs font-medium">0 / 1 GB</span>
-                      </div>
-                      <Progress value={0} className="h-1.5" />
-                    </div>
-
-                    <Separator className="my-2" />
-
-                    <div className="rounded-lg bg-muted/50 p-3 text-xs space-y-1 border border-border/50">
-                      <div className="font-semibold text-foreground flex items-center gap-1.5">
-                        <Sparkles className="size-3.5 text-primary" />
-                        Enterprise Protection
-                      </div>
-                      <p className="text-muted-foreground text-[11px] leading-relaxed">
-                        Upgrade to scale your cryptographic inventory and run automated quantum audits.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
           </div>
         </main>
@@ -969,7 +896,7 @@ export default function ProjectsView() {
                 disabled={isCreating || !newProjectName.trim()}
                 className="h-9 text-xs font-semibold"
               >
-                {isCreating ? "Deploying..." : "Deploy Project"}
+                {isCreating ? "Creating..." : "Create Project"}
               </Button>
             </DialogFooter>
           </form>
@@ -1022,22 +949,8 @@ export default function ProjectsView() {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsProModalOpen(false)}
-              className="h-9 text-xs"
-            >
-              Maybe Later
-            </Button>
-            <Button
-              onClick={() => {
-                setIsProModalOpen(false)
-                showToast("14-Day Enterprise Trial Activated!")
-              }}
-              className="h-9 text-xs font-semibold"
-            >
-              Start 14-Day Free Trial
-            </Button>
+     
+          
           </DialogFooter>
         </DialogContent>
       </Dialog>
